@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Practice Lab</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────── -->
+<header>
+  <h1>SQL Practice Lab</h1>
+  <div class="header-controls">
+
+    <div class="source-group" role="group" aria-label="Question source">
+      <button class="btn-source active" data-source="bank">Question Bank</button>
+      <button class="btn-source" data-source="generated">AI Generated</button>
+    </div>
+
+    <select id="questionListSelect" title="Jump to a specific question">
+      <option value="">— Static Questions List —</option>
+    </select>
+
+    <div class="difficulty-group" role="group" aria-label="Difficulty">
+      <button class="btn-diff" data-diff="Easy">Easy</button>
+      <button class="btn-diff" data-diff="Medium">Medium</button>
+      <button class="btn-diff" data-diff="Hard">Hard</button>
+      <button class="btn-diff active" data-diff="All" id="btnAllRandom">All</button>
+    </div>
+
+    <div class="topic-picker-wrapper" id="topicPickerWrapper">
+      <button class="btn-topic" id="topicPickerBtn">☰ Select Topic</button>
+      <div class="topic-panel hidden" id="topicPanel">
+        <div class="topic-list" id="topicList"></div>
+        <div class="topic-count hidden" id="topicCount"></div>
+      </div>
+    </div>
+
+    <button class="btn-new" id="newProblemBtn">⟳ New Question</button>
+    <button class="btn-danger hidden" id="tryAgainBtn">↺ Try Again</button>
+  </div>
+</header>
+
+<!-- ── Loading overlay ────────────────────────── -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p id="loadingMsg">Generating question…</p>
+  </div>
+</div>
+
+<!-- ── Main workspace ─────────────────────────── -->
+<div class="workspace">
+
+  <!-- ── Left: problem panel ──────────────────── -->
+  <aside class="problem-panel">
+
+    <div class="problem-meta">
+      <h2 id="problemTitle">Loading…</h2>
+      <span class="badge Medium" id="difficultyBadge">Medium</span>
+      <span class="badge category" id="categoryBadge">—</span>
+    </div>
+
+    <div>
+      <div class="section-label">Description</div>
+      <p class="description" id="descriptionText"></p>
+    </div>
+
+    <div>
+      <div class="section-label">Your Task</div>
+      <p class="question-box" id="questionText"></p>
+    </div>
+
+    <div class="tables-section">
+      <h3>Available Tables</h3>
+      <div id="tablesPreviews"></div>
+    </div>
+
+    <div>
+      <button class="hint-toggle" id="hintToggle">Show Hint</button>
+      <div class="hint-box hidden" id="hintBox"></div>
+    </div>
+
+  </aside>
+
+  <!-- ── Right: editor + choices ──────────────── -->
+  <section class="editor-panel">
+
+    <div class="editor-section">
+      <label for="sqlEditor">Write your SQL query (Ctrl+Enter to submit)</label>
+      <textarea
+        id="sqlEditor"
+        spellcheck="false"
+        placeholder="-- Write your SQL query here...
+SELECT
+    ...
+FROM
+    ...
+WHERE
+    ...;"></textarea>
+    </div>
+
+    <div class="choices-section">
+      <button class="choices-toggle" id="choicesToggle">
+        <span class="toggle-arrow">▶</span>
+        <span>Multiple Choice Hints</span>
+      </button>
+      <div class="choices-body hidden" id="choicesBody">
+        <p class="choices-subtitle">— click to expand, click again to select</p>
+        <div id="choicesList"></div>
+      </div>
+    </div>
+
+    <div class="submit-bar">
+      <button class="btn-primary" id="submitBtn">Submit Answer</button>
+      <span class="hint-msg">Submit a query, a choice, or both. (Ctrl+Enter)</span>
+    </div>
+
+  </section>
+
+</div>
+
+<!-- ── Results panel ───────────────────────────── -->
+<div id="resultsPanel">
+
+  <div id="resultBanner" class="result-banner"></div>
+  <div id="choiceBanner" class="result-banner" style="display:none"></div>
+
+  <div class="output-comparison">
+    <div class="output-block">
+      <h4>Your Output (<span id="userRowCount">0</span> rows)</h4>
+      <div id="userOutputBlock"></div>
+    </div>
+    <div class="output-block">
+      <h4>Expected Output (<span id="expectedRowCount">0</span> rows)</h4>
+      <div id="expectedOutputBlock"></div>
+    </div>
+  </div>
+
+  <div class="explanation-section">
+    <h4>Explanation</h4>
+    <div class="explanation-body" id="explanationBody"></div>
+  </div>
+
+  <div class="choices-analysis">
+    <h4>Answer Analysis — All Choices</h4>
+    <div id="choiceAnalysis"></div>
+  </div>
+
+</div>
+
+<script src="/static/script.js?v=7"></script>
+</body>
+</html>
