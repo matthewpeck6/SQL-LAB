@@ -1,0 +1,197 @@
+[
+  {
+    "id": 126,
+    "title": "2024 Quarterly Revenue Summary",
+    "difficulty": "Medium",
+    "category": "Aggregation & Grouping",
+    "description": "The CFO wants a quarterly revenue rollup for 2024 to present in the board meeting. Months need to be grouped into Q1 (Jan-Mar) and Q2 (Apr-Jun).",
+    "question": "Write a query using the monthly_revenue table filtered to year 2024 that returns a quarter label (Q1 or Q2) as quarter and the total revenue as quarterly_revenue. Use a CASE expression to assign quarter labels based on month number. Group by quarter and order by quarter.",
+    "hint": "Use CASE WHEN month <= 3 THEN 'Q1' ELSE 'Q2' END to assign quarters, then GROUP BY quarter with SUM(revenue).",
+    "table_names": ["monthly_revenue"],
+    "correct_query": "SELECT CASE\n           WHEN month <= 3 THEN 'Q1'\n           WHEN month <= 6 THEN 'Q2'\n       END AS quarter,\n       SUM(revenue) AS quarterly_revenue\nFROM monthly_revenue\nWHERE year = 2024\nGROUP BY quarter\nORDER BY quarter;",
+    "order_matters": true,
+    "explanation": "**CASE WHEN month <= 3 THEN 'Q1' WHEN month <= 6 THEN 'Q2'** assigns quarter labels. **WHERE year = 2024** limits to 2024 data. **GROUP BY quarter** (the alias works in DuckDB's GROUP BY) aggregates monthly revenues. Q1 = 195000 + 182000 + 210000 = 587000; Q2 = 225000 + 240000 + 258000 = 723000.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT CASE\n           WHEN month <= 3 THEN 'Q1'\n           WHEN month <= 6 THEN 'Q2'\n       END AS quarter,\n       SUM(revenue) AS quarterly_revenue\nFROM monthly_revenue\nWHERE year = 2024\nGROUP BY quarter\nORDER BY quarter;",
+        "correct": true,
+        "explanation": "CORRECT. CASE expression correctly labels Q1 (months 1-3) and Q2 (months 4-6), grouped and summed to give 587000 and 723000."
+      },
+      {
+        "id": "B",
+        "text": "SELECT CASE\n           WHEN month BETWEEN 1 AND 3 THEN 'Q1'\n           WHEN month BETWEEN 4 AND 6 THEN 'Q2'\n       END AS quarter,\n       SUM(revenue) AS quarterly_revenue\nFROM monthly_revenue\nGROUP BY quarter\nORDER BY quarter;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing WHERE year = 2024, so this aggregates 2023 and 2024 data together for months 1-6, inflating both Q1 and Q2 totals."
+      },
+      {
+        "id": "C",
+        "text": "SELECT CASE\n           WHEN month <= 3 THEN 'Q1'\n           WHEN month <= 6 THEN 'Q2'\n       END AS quarter,\n       AVG(revenue) AS quarterly_revenue\nFROM monthly_revenue\nWHERE year = 2024\nGROUP BY quarter\nORDER BY quarter;",
+        "correct": false,
+        "explanation": "INCORRECT. Uses AVG instead of SUM, returning the average monthly revenue per quarter rather than the total quarterly revenue."
+      },
+      {
+        "id": "D",
+        "text": "SELECT CASE\n           WHEN month IN (1,2,3) THEN 'Q1'\n           WHEN month IN (4,5,6) THEN 'Q2'\n           WHEN month IN (7,8,9) THEN 'Q3'\n           WHEN month IN (10,11,12) THEN 'Q4'\n       END AS quarter,\n       SUM(revenue) AS quarterly_revenue\nFROM monthly_revenue\nWHERE year = 2024\nGROUP BY quarter\nORDER BY quarter;",
+        "correct": false,
+        "explanation": "INCORRECT. Includes Q3 and Q4 labels in the CASE expression, but since 2024 data only has months 1-6, Q3 and Q4 result in NULL quarter values which still appears in output — the CASE should match the actual data range."
+      }
+    ]
+  },
+  {
+    "id": 127,
+    "title": "Staff with Their Manager Names",
+    "difficulty": "Medium",
+    "category": "Joins",
+    "description": "HR needs an org chart listing each staff member alongside their direct manager. This requires a self-join on the staff table since managers are also staff members.",
+    "question": "Write a query that self-joins the staff table to return each employee's name, department, salary, and their manager's name as manager_name. Use a LEFT JOIN so that the top-level executive (Sarah Connor, who has no manager) also appears. Order by staff_id.",
+    "hint": "JOIN staff s to staff m ON s.manager_id = m.staff_id using LEFT JOIN so staff with NULL manager_id still appears.",
+    "table_names": ["staff"],
+    "correct_query": "SELECT s.name,\n       s.department,\n       s.salary,\n       m.name AS manager_name\nFROM staff s\nLEFT JOIN staff m ON s.manager_id = m.staff_id\nORDER BY s.staff_id;",
+    "order_matters": true,
+    "explanation": "A **self-join** treats the staff table as two separate references. **s** is the employee alias and **m** is the manager alias. **LEFT JOIN** is required so Sarah Connor (manager_id = NULL) still appears with NULL as manager_name rather than being excluded by an INNER JOIN. All 10 staff members are returned.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT s.name,\n       s.department,\n       s.salary,\n       m.name AS manager_name\nFROM staff s\nLEFT JOIN staff m ON s.manager_id = m.staff_id\nORDER BY s.staff_id;",
+        "correct": true,
+        "explanation": "CORRECT. LEFT JOIN self-join correctly pairs each employee with their manager by joining manager_id to staff_id, keeping Sarah Connor with NULL manager."
+      },
+      {
+        "id": "B",
+        "text": "SELECT s.name,\n       s.department,\n       s.salary,\n       m.name AS manager_name\nFROM staff s\nJOIN staff m ON s.manager_id = m.staff_id\nORDER BY s.staff_id;",
+        "correct": false,
+        "explanation": "INCORRECT. INNER JOIN excludes rows where manager_id IS NULL, so Sarah Connor (the executive with no manager) would be missing from the results."
+      },
+      {
+        "id": "C",
+        "text": "SELECT s.name,\n       s.department,\n       s.salary,\n       m.name AS manager_name\nFROM staff s\nLEFT JOIN staff m ON s.staff_id = m.manager_id\nORDER BY s.staff_id;",
+        "correct": false,
+        "explanation": "INCORRECT. The join condition is reversed: s.staff_id = m.manager_id finds employees who manage others, not the manager of each employee. This returns multiple rows per manager (one per direct report) and wrong name pairings."
+      },
+      {
+        "id": "D",
+        "text": "SELECT s.name,\n       s.department,\n       s.salary,\n       m.name AS manager_name\nFROM staff m\nLEFT JOIN staff s ON s.manager_id = m.staff_id\nORDER BY s.staff_id;",
+        "correct": false,
+        "explanation": "INCORRECT. The LEFT JOIN is from manager (m) to employee (s), so top-level managers without reports can appear but Sarah Connor as a non-employee-of-anyone is still excluded; the semantics are inverted."
+      }
+    ]
+  },
+  {
+    "id": 128,
+    "title": "Most Expensive Product per Category",
+    "difficulty": "Medium",
+    "category": "Window Functions",
+    "description": "The catalog team wants to feature the most premium product in each category for a flagship display. Using RANK() allows ties to be handled gracefully.",
+    "question": "Write a query using a CTE that assigns RANK() OVER (PARTITION BY category ORDER BY price DESC) as price_rank to each product. In the outer query return category, product name, and price for rows where price_rank = 1. Order by category.",
+    "hint": "CTE assigns RANK() OVER (PARTITION BY category ORDER BY price DESC), outer query filters WHERE price_rank = 1.",
+    "table_names": ["products"],
+    "correct_query": "WITH ranked_products AS (\n    SELECT category,\n           name,\n           price,\n           RANK() OVER (PARTITION BY category ORDER BY price DESC) AS price_rank\n    FROM products\n)\nSELECT category,\n       name,\n       price\nFROM ranked_products\nWHERE price_rank = 1\nORDER BY category;",
+    "order_matters": true,
+    "explanation": "**RANK() OVER (PARTITION BY category ORDER BY price DESC)** assigns rank 1 to the highest-priced product within each category. If multiple products share the top price, they all get rank 1. The CTE isolates the ranking logic, and the outer query filters **WHERE price_rank = 1**. Results: Electronics=Laptop Pro ($1299.99), Furniture=Standing Desk ($549.99), Stationery=Notebook Set ($19.99).",
+    "choices": [
+      {
+        "id": "A",
+        "text": "WITH ranked_products AS (\n    SELECT category,\n           name,\n           price,\n           RANK() OVER (PARTITION BY category ORDER BY price DESC) AS price_rank\n    FROM products\n)\nSELECT category,\n       name,\n       price\nFROM ranked_products\nWHERE price_rank = 1\nORDER BY category;",
+        "correct": true,
+        "explanation": "CORRECT. RANK() OVER PARTITION BY category correctly identifies the highest-priced product per category, returning 3 rows."
+      },
+      {
+        "id": "B",
+        "text": "WITH ranked_products AS (\n    SELECT category,\n           name,\n           price,\n           RANK() OVER (ORDER BY price DESC) AS price_rank\n    FROM products\n)\nSELECT category,\n       name,\n       price\nFROM ranked_products\nWHERE price_rank = 1\nORDER BY category;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing PARTITION BY category, so rank is assigned globally across all products; only the single most expensive product (Laptop Pro) gets rank 1, returning 1 row instead of 3."
+      },
+      {
+        "id": "C",
+        "text": "WITH ranked_products AS (\n    SELECT category,\n           name,\n           price,\n           RANK() OVER (PARTITION BY category ORDER BY price ASC) AS price_rank\n    FROM products\n)\nSELECT category,\n       name,\n       price\nFROM ranked_products\nWHERE price_rank = 1\nORDER BY category;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY price ASC assigns rank 1 to the cheapest product per category (Wireless Mouse, Desk Lamp, Pen Pack) rather than the most expensive."
+      },
+      {
+        "id": "D",
+        "text": "SELECT category,\n       name,\n       price\nFROM products\nWHERE price = (\n    SELECT MAX(price)\n    FROM products p2\n    WHERE p2.category = products.category\n)\nORDER BY category;",
+        "correct": false,
+        "explanation": "INCORRECT. While a correlated subquery approach can work, it is not the RANK() window function CTE pattern requested by the question."
+      }
+    ]
+  },
+  {
+    "id": 129,
+    "title": "Second Highest Salary per Department",
+    "difficulty": "Medium",
+    "category": "Window Functions",
+    "description": "The succession planning team wants to identify the second-highest earner in each department. DENSE_RANK handles ties so that no salary level is skipped when ranking.",
+    "question": "Write a query using a CTE that assigns DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) as salary_rank to each employee. In the outer query join to departments and return employee name, department_name, and salary for employees where salary_rank = 2. Order by department_name.",
+    "hint": "Use DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) in a CTE, filter WHERE salary_rank = 2 in outer query.",
+    "table_names": ["employees", "departments"],
+    "correct_query": "WITH ranked_salaries AS (\n    SELECT employee_id,\n           name,\n           department_id,\n           salary,\n           DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) AS salary_rank\n    FROM employees\n)\nSELECT rs.name,\n       d.department_name,\n       rs.salary\nFROM ranked_salaries rs\nJOIN departments d ON rs.department_id = d.department_id\nWHERE rs.salary_rank = 2\nORDER BY d.department_name;",
+    "order_matters": false,
+    "explanation": "**DENSE_RANK()** assigns consecutive ranks without gaps even when there are ties. In Engineering: Alice and Carol tied at 95k are rank 1, Bob at 85k is rank 2. In Sales: David and Frank tied at 110k are rank 1, Emma at 98k is rank 2. In Marketing: Henry at 78k is rank 1, Grace and Isabel tied at 72k are both rank 2 (returning 2 rows for Marketing). Total: 4 rows.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "WITH ranked_salaries AS (\n    SELECT employee_id,\n           name,\n           department_id,\n           salary,\n           DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) AS salary_rank\n    FROM employees\n)\nSELECT rs.name,\n       d.department_name,\n       rs.salary\nFROM ranked_salaries rs\nJOIN departments d ON rs.department_id = d.department_id\nWHERE rs.salary_rank = 2\nORDER BY d.department_name;",
+        "correct": true,
+        "explanation": "CORRECT. DENSE_RANK correctly handles ties (Grace and Isabel both rank 2 in Marketing), returning 4 rows total."
+      },
+      {
+        "id": "B",
+        "text": "WITH ranked_salaries AS (\n    SELECT employee_id,\n           name,\n           department_id,\n           salary,\n           RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) AS salary_rank\n    FROM employees\n)\nSELECT rs.name,\n       d.department_name,\n       rs.salary\nFROM ranked_salaries rs\nJOIN departments d ON rs.department_id = d.department_id\nWHERE rs.salary_rank = 2\nORDER BY d.department_name;",
+        "correct": false,
+        "explanation": "INCORRECT. RANK() skips ranks after ties: in Engineering, Alice and Carol both get rank 1, and Bob gets rank 3 (not 2), so Bob would not appear in results filtered by salary_rank = 2."
+      },
+      {
+        "id": "C",
+        "text": "WITH ranked_salaries AS (\n    SELECT employee_id,\n           name,\n           department_id,\n           salary,\n           DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary ASC) AS salary_rank\n    FROM employees\n)\nSELECT rs.name,\n       d.department_name,\n       rs.salary\nFROM ranked_salaries rs\nJOIN departments d ON rs.department_id = d.department_id\nWHERE rs.salary_rank = 2\nORDER BY d.department_name;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY salary ASC assigns rank 1 to the lowest salary, so salary_rank = 2 returns the second-lowest earner per department, not the second-highest."
+      },
+      {
+        "id": "D",
+        "text": "WITH ranked_salaries AS (\n    SELECT employee_id,\n           name,\n           department_id,\n           salary,\n           ROW_NUMBER() OVER (PARTITION BY department_id ORDER BY salary DESC) AS salary_rank\n    FROM employees\n)\nSELECT rs.name,\n       d.department_name,\n       rs.salary\nFROM ranked_salaries rs\nJOIN departments d ON rs.department_id = d.department_id\nWHERE rs.salary_rank = 2\nORDER BY d.department_name;",
+        "correct": false,
+        "explanation": "INCORRECT. ROW_NUMBER() assigns unique sequential numbers even to tied values, so tied employees at the same salary level get different row numbers; Grace and Isabel would not both get rank 2 in Marketing."
+      }
+    ]
+  },
+  {
+    "id": 130,
+    "title": "Products Appearing in Three or More Distinct Orders",
+    "difficulty": "Medium",
+    "category": "Aggregation & Grouping",
+    "description": "Procurement wants to identify consistently popular products that appear across many different customer orders. Products ordered frequently in distinct transactions indicate steady, sustained demand.",
+    "question": "Write a query joining products to order_items that returns product name and the count of distinct orders containing that product as order_appearances. Filter using HAVING to include only products that appear in 3 or more distinct orders. Order by order_appearances descending.",
+    "hint": "Use COUNT(DISTINCT oi.order_id) AS order_appearances with HAVING COUNT(DISTINCT oi.order_id) >= 3.",
+    "table_names": ["products", "order_items"],
+    "correct_query": "SELECT p.name,\n       COUNT(DISTINCT oi.order_id) AS order_appearances\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nHAVING COUNT(DISTINCT oi.order_id) >= 3\nORDER BY order_appearances DESC;",
+    "order_matters": true,
+    "explanation": "**COUNT(DISTINCT oi.order_id)** counts how many unique orders contain each product. **HAVING COUNT(DISTINCT oi.order_id) >= 3** filters to products in 3+ orders. Laptop Pro appears in orders 1, 6, 15, 19 (4 orders); Wireless Mouse in orders 2, 8, 14 (3); USB-C Hub in 2, 11, 14 (3); Headphones in 7, 12, 20 (3); Monitor in 3, 10, 18 (3); Office Chair in 5, 17 (only 2 — excluded); Standing Desk in 4, 13 (only 2 — excluded); Mechanical Keyboard in 3, 8, 16 (3). 6 products qualify.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT p.name,\n       COUNT(DISTINCT oi.order_id) AS order_appearances\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nHAVING COUNT(DISTINCT oi.order_id) >= 3\nORDER BY order_appearances DESC;",
+        "correct": true,
+        "explanation": "CORRECT. COUNT(DISTINCT order_id) correctly counts unique orders per product, and HAVING filters to 3+ appearances, returning 6 products."
+      },
+      {
+        "id": "B",
+        "text": "SELECT p.name,\n       COUNT(oi.order_id) AS order_appearances\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nHAVING COUNT(oi.order_id) >= 3\nORDER BY order_appearances DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. COUNT without DISTINCT counts total line item rows (including duplicate orders for the same product), not unique orders. For this dataset both happen to return the same count per product, but the intent is COUNT DISTINCT."
+      },
+      {
+        "id": "C",
+        "text": "SELECT p.name,\n       COUNT(DISTINCT oi.order_id) AS order_appearances\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nHAVING order_appearances >= 3\nORDER BY order_appearances DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. HAVING references the alias order_appearances, which is not valid in standard SQL HAVING clauses — the aggregate expression must be repeated in HAVING."
+      },
+      {
+        "id": "D",
+        "text": "SELECT p.name,\n       COUNT(DISTINCT oi.order_id) AS order_appearances\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nHAVING COUNT(DISTINCT oi.order_id) > 3\nORDER BY order_appearances DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. > 3 requires more than 3 appearances, returning only Laptop Pro (4 orders) instead of all 6 products with 3 or more appearances."
+      }
+    ]
+  }
+]

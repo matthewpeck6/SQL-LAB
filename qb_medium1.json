@@ -1,0 +1,419 @@
+[
+  {
+    "id": 116,
+    "title": "Running Total of 2024 Monthly Revenue",
+    "difficulty": "Medium",
+    "category": "Window Functions",
+    "description": "The finance team wants to track how revenue accumulates month by month throughout 2024. A running total shows the cumulative progress toward annual targets.",
+    "question": "Write a query using the monthly_revenue table that returns year, month, revenue, and a running total of revenue as running_total for the year 2024. Use a window function with SUM() OVER (PARTITION BY year ORDER BY month). Order results by month ascending.",
+    "hint": "Use SUM(revenue) OVER (PARTITION BY year ORDER BY month) as a window function for the running total.",
+    "table_names": [
+      "monthly_revenue"
+    ],
+    "correct_query": "SELECT year,\n       month,\n       revenue,\n       SUM(revenue) OVER (PARTITION BY year ORDER BY month) AS running_total\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+    "order_matters": true,
+    "explanation": "**SUM(revenue) OVER (PARTITION BY year ORDER BY month)** is a **window function** that computes a cumulative sum. **PARTITION BY year** resets the running total for each year. **ORDER BY month** within the window ensures the sum accumulates month by month. The running total for Jan 2024 starts at 195000, then 377000 by Feb, and so on.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT year,\n       month,\n       revenue,\n       SUM(revenue) OVER (PARTITION BY year ORDER BY month) AS running_total\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+        "correct": true,
+        "explanation": "CORRECT. PARTITION BY year ensures the running total resets per year, and ORDER BY month within the window accumulates correctly."
+      },
+      {
+        "id": "B",
+        "text": "SELECT year,\n       month,\n       revenue,\n       SUM(revenue) OVER (ORDER BY month) AS running_total\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing PARTITION BY year in the window function; without it, the sum would still work for a single-year filter but is semantically wrong and would fail if multiple years were included."
+      },
+      {
+        "id": "C",
+        "text": "SELECT year,\n       month,\n       revenue,\n       SUM(revenue) OVER (PARTITION BY month ORDER BY year) AS running_total\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+        "correct": false,
+        "explanation": "INCORRECT. PARTITION BY month ORDER BY year computes cumulative sum across years within each month, not a monthly running total within a year."
+      },
+      {
+        "id": "D",
+        "text": "SELECT year,\n       month,\n       revenue,\n       SUM(revenue) OVER () AS running_total\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+        "correct": false,
+        "explanation": "INCORRECT. OVER () with no ORDER BY computes the grand total for all rows in the window frame (the entire 2024 dataset), so every row shows the same total rather than a running cumulative sum."
+      }
+    ]
+  },
+  {
+    "id": 117,
+    "title": "Month-over-Month Revenue Change",
+    "difficulty": "Medium",
+    "category": "Window Functions",
+    "description": "The analytics team needs to measure how revenue changes from one month to the next across all available data. This month-over-month comparison highlights growth trends and anomalies.",
+    "question": "Write a query using the monthly_revenue table that returns year, month, revenue, the previous month's revenue as prev_revenue using LAG(), and the difference (revenue minus prev_revenue) as revenue_change. Order by year, month ascending.",
+    "hint": "Use LAG(revenue) OVER (ORDER BY year, month) to get the previous row's revenue, then subtract to find the change.",
+    "table_names": [
+      "monthly_revenue"
+    ],
+    "correct_query": "SELECT year,\n       month,\n       revenue,\n       LAG(revenue) OVER (ORDER BY year, month) AS prev_revenue,\n       revenue - LAG(revenue) OVER (ORDER BY year, month) AS revenue_change\nFROM monthly_revenue\nORDER BY year, month;",
+    "order_matters": true,
+    "explanation": "**LAG(revenue) OVER (ORDER BY year, month)** accesses the revenue value from the previous row in the ordered sequence. The first row (Jan 2023) will have NULL for prev_revenue since there is no prior row. **revenue - LAG(...)** computes the month-over-month change. The window spans across years so Dec 2023 to Jan 2024 transition is captured.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT year,\n       month,\n       revenue,\n       LAG(revenue) OVER (ORDER BY year, month) AS prev_revenue,\n       revenue - LAG(revenue) OVER (ORDER BY year, month) AS revenue_change\nFROM monthly_revenue\nORDER BY year, month;",
+        "correct": true,
+        "explanation": "CORRECT. LAG with ORDER BY year, month correctly retrieves the previous month's revenue across all 18 rows, enabling month-over-month comparison."
+      },
+      {
+        "id": "B",
+        "text": "SELECT year,\n       month,\n       revenue,\n       LAG(revenue) OVER (PARTITION BY year ORDER BY month) AS prev_revenue,\n       revenue - LAG(revenue) OVER (PARTITION BY year ORDER BY month) AS revenue_change\nFROM monthly_revenue\nORDER BY year, month;",
+        "correct": false,
+        "explanation": "INCORRECT. PARTITION BY year resets the window at each year boundary, so January of each year always has NULL prev_revenue and the December-to-January transition is never captured."
+      },
+      {
+        "id": "C",
+        "text": "SELECT year,\n       month,\n       revenue,\n       LEAD(revenue) OVER (ORDER BY year, month) AS prev_revenue,\n       revenue - LEAD(revenue) OVER (ORDER BY year, month) AS revenue_change\nFROM monthly_revenue\nORDER BY year, month;",
+        "correct": false,
+        "explanation": "INCORRECT. LEAD retrieves the next row's value, not the previous one; this computes revenue minus the next month's revenue instead of the month-over-month change."
+      },
+      {
+        "id": "D",
+        "text": "SELECT year,\n       month,\n       revenue,\n       LAG(revenue, 2) OVER (ORDER BY year, month) AS prev_revenue,\n       revenue - LAG(revenue, 2) OVER (ORDER BY year, month) AS revenue_change\nFROM monthly_revenue\nORDER BY year, month;",
+        "correct": false,
+        "explanation": "INCORRECT. LAG(revenue, 2) retrieves the value from 2 rows back (two months ago), computing a two-month change instead of month-over-month."
+      }
+    ]
+  },
+  {
+    "id": 118,
+    "title": "Customers with Three or More Orders",
+    "difficulty": "Medium",
+    "category": "Aggregation & Grouping",
+    "description": "The loyalty program team wants to identify repeat customers who have placed at least 3 orders, as these are candidates for a premium rewards tier.",
+    "question": "Write a query that returns customer_id and the count of orders as order_count for customers who have placed 3 or more orders. Group by customer_id and use HAVING to filter. Order by order_count descending.",
+    "hint": "Use GROUP BY customer_id with COUNT(order_id) and HAVING COUNT(order_id) >= 3.",
+    "table_names": [
+      "orders"
+    ],
+    "correct_query": "SELECT customer_id,\n       COUNT(order_id) AS order_count\nFROM orders\nGROUP BY customer_id\nHAVING COUNT(order_id) >= 3\nORDER BY order_count DESC;",
+    "order_matters": true,
+    "explanation": "**GROUP BY customer_id** aggregates all orders per customer. **HAVING COUNT(order_id) >= 3** filters the grouped results to only include customers with 3 or more orders — **HAVING** is required here because we are filtering on an aggregate. Customer 1 (Alice) has 4 orders, customers 2 (Bob) and 3 (Carol) each have 3, giving 3 rows.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT customer_id,\n       COUNT(order_id) AS order_count\nFROM orders\nGROUP BY customer_id\nHAVING COUNT(order_id) >= 3\nORDER BY order_count DESC;",
+        "correct": true,
+        "explanation": "CORRECT. HAVING filters after grouping on the aggregate count, returning 3 customers with 3+ orders."
+      },
+      {
+        "id": "B",
+        "text": "SELECT customer_id,\n       COUNT(order_id) AS order_count\nFROM orders\nWHERE COUNT(order_id) >= 3\nGROUP BY customer_id\nORDER BY order_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. WHERE cannot reference aggregate functions; COUNT() in a WHERE clause causes a syntax error. HAVING must be used for aggregate filters."
+      },
+      {
+        "id": "C",
+        "text": "SELECT customer_id,\n       COUNT(order_id) AS order_count\nFROM orders\nGROUP BY customer_id\nHAVING COUNT(order_id) > 3\nORDER BY order_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. > 3 requires more than 3 orders, excluding Bob and Carol who each have exactly 3 orders, returning only Alice with 4."
+      },
+      {
+        "id": "D",
+        "text": "SELECT customer_id,\n       COUNT(order_id) AS order_count\nFROM orders\nGROUP BY customer_id\nHAVING order_count >= 3\nORDER BY order_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. HAVING order_count >= 3 references the alias rather than the expression; in standard SQL and DuckDB's strict mode, aliases are not available in HAVING — the aggregate expression must be repeated."
+      }
+    ]
+  },
+  {
+    "id": 119,
+    "title": "Customers Who Have Never Ordered",
+    "difficulty": "Medium",
+    "category": "Joins",
+    "description": "The marketing team wants to re-engage customers who have registered but never made a purchase. Identifying these customers allows for targeted outreach campaigns.",
+    "question": "Write a query using a LEFT JOIN from customers to orders that returns the name and city of customers who have never placed any order. Use WHERE to filter for NULL order_id values.",
+    "hint": "LEFT JOIN customers to orders on customer_id, then WHERE o.order_id IS NULL to find unmatched customers.",
+    "table_names": [
+      "customers",
+      "orders"
+    ],
+    "correct_query": "SELECT c.name,\n       c.city\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nWHERE o.order_id IS NULL;",
+    "order_matters": false,
+    "explanation": "**LEFT JOIN** preserves all customers regardless of whether they have orders. For customers with no orders, all columns from the orders table are NULL. **WHERE o.order_id IS NULL** filters to only those unmatched rows. Oliver White and Sophia Harris (customers 11 and 12) have no orders and are returned.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT c.name,\n       c.city\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nWHERE o.order_id IS NULL;",
+        "correct": true,
+        "explanation": "CORRECT. LEFT JOIN preserves all customers, and IS NULL on the orders table column identifies the 2 customers with no matching orders."
+      },
+      {
+        "id": "B",
+        "text": "SELECT c.name,\n       c.city\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nWHERE o.order_id IS NULL;",
+        "correct": false,
+        "explanation": "INCORRECT. INNER JOIN only returns rows where both tables match; there are no NULL order_ids after an inner join, so this returns 0 rows."
+      },
+      {
+        "id": "C",
+        "text": "SELECT c.name,\n       c.city\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nWHERE o.order_id IS NOT NULL;",
+        "correct": false,
+        "explanation": "INCORRECT. IS NOT NULL keeps only customers who DO have orders, returning the 10 active customers instead of the 2 who never ordered."
+      },
+      {
+        "id": "D",
+        "text": "SELECT c.name,\n       c.city\nFROM customers c\nWHERE c.customer_id NOT IN (SELECT customer_id FROM orders);",
+        "correct": false,
+        "explanation": "INCORRECT. While a NOT IN subquery can work conceptually, if the subquery returns any NULL values, NOT IN evaluates to UNKNOWN for all rows and returns 0 results. The LEFT JOIN + IS NULL pattern is safer and more explicit."
+      }
+    ]
+  },
+  {
+    "id": 120,
+    "title": "Most Recent Order per Customer",
+    "difficulty": "Medium",
+    "category": "Window Functions",
+    "description": "Customer service wants to quickly see the last order placed by each customer for account review purposes. Using ROW_NUMBER() in a CTE is the standard approach for this type of per-group latest-record query.",
+    "question": "Write a query using a CTE that assigns ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) as rn to each order. In the outer query, join to customers and return customer name, order_id, order_date, and total_amount for only the rows where rn = 1 (most recent order per customer). Order by customer name.",
+    "hint": "Use a CTE with ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC), then filter WHERE rn = 1 in the outer query.",
+    "table_names": [
+      "customers",
+      "orders"
+    ],
+    "correct_query": "WITH ranked_orders AS (\n    SELECT customer_id,\n           order_id,\n           order_date,\n           total_amount,\n           ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) AS rn\n    FROM orders\n)\nSELECT c.name,\n       ro.order_id,\n       ro.order_date,\n       ro.total_amount\nFROM ranked_orders ro\nJOIN customers c ON ro.customer_id = c.customer_id\nWHERE ro.rn = 1\nORDER BY c.name;",
+    "order_matters": false,
+    "explanation": "The **CTE** (WITH clause) assigns a **ROW_NUMBER()** to each order partitioned by customer, ordered most recent first. **PARTITION BY customer_id** means numbering restarts for each customer. The outer query filters **WHERE rn = 1** to keep only each customer's most recent order. The JOIN brings in customer names. Customers 11 and 12 have no orders so they do not appear.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "WITH ranked_orders AS (\n    SELECT customer_id,\n           order_id,\n           order_date,\n           total_amount,\n           ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) AS rn\n    FROM orders\n)\nSELECT c.name,\n       ro.order_id,\n       ro.order_date,\n       ro.total_amount\nFROM ranked_orders ro\nJOIN customers c ON ro.customer_id = c.customer_id\nWHERE ro.rn = 1\nORDER BY c.name;",
+        "correct": true,
+        "explanation": "CORRECT. CTE assigns row numbers per customer ordered by date desc, outer query filters rn=1 for the most recent order per customer."
+      },
+      {
+        "id": "B",
+        "text": "WITH ranked_orders AS (\n    SELECT customer_id,\n           order_id,\n           order_date,\n           total_amount,\n           ROW_NUMBER() OVER (ORDER BY order_date DESC) AS rn\n    FROM orders\n)\nSELECT c.name,\n       ro.order_id,\n       ro.order_date,\n       ro.total_amount\nFROM ranked_orders ro\nJOIN customers c ON ro.customer_id = c.customer_id\nWHERE ro.rn = 1\nORDER BY c.name;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing PARTITION BY customer_id, so ROW_NUMBER ranks globally across all orders; only 1 row total is returned (the globally most recent order) instead of one per customer."
+      },
+      {
+        "id": "C",
+        "text": "WITH ranked_orders AS (\n    SELECT customer_id,\n           order_id,\n           order_date,\n           total_amount,\n           ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date ASC) AS rn\n    FROM orders\n)\nSELECT c.name,\n       ro.order_id,\n       ro.order_date,\n       ro.total_amount\nFROM ranked_orders ro\nJOIN customers c ON ro.customer_id = c.customer_id\nWHERE ro.rn = 1\nORDER BY c.name;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY order_date ASC inside the window numbers the oldest order as rn=1, so the query returns each customer's earliest order rather than the most recent."
+      },
+      {
+        "id": "D",
+        "text": "SELECT c.name,\n       o.order_id,\n       o.order_date,\n       o.total_amount\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nWHERE o.order_date = (\n    SELECT MAX(order_date)\n    FROM orders o2\n    WHERE o2.customer_id = o.customer_id\n)\nORDER BY c.name;",
+        "correct": false,
+        "explanation": "INCORRECT. While a correlated subquery approach can work, it uses MAX(order_date) which could return multiple rows if a customer placed two orders on the same date. The ROW_NUMBER CTE approach is the intended solution."
+      }
+    ]
+  },
+  {
+    "id": 121,
+    "title": "Product Revenue as Percentage of Total",
+    "difficulty": "Medium",
+    "category": "Window Functions",
+    "description": "The sales analytics team wants to understand how much each product contributes to overall revenue. Expressing product revenue as a percentage of the grand total reveals which items drive the most value.",
+    "question": "Write a query joining products to order_items that returns product name, total product revenue as product_revenue (SUM of quantity * unit_price, rounded to 2 decimals), and the percentage of total revenue as revenue_pct (rounded to 2 decimals). Use a window function SUM() OVER () for the grand total. Order by product_revenue descending.",
+    "hint": "Use SUM(oi.quantity * oi.unit_price) per product, then divide by SUM(SUM(...)) OVER () for the total to compute pct.",
+    "table_names": [
+      "products",
+      "order_items"
+    ],
+    "correct_query": "SELECT p.name,\n       ROUND(SUM(oi.quantity * oi.unit_price), 2) AS product_revenue,\n       ROUND(100.0 * SUM(oi.quantity * oi.unit_price) / SUM(SUM(oi.quantity * oi.unit_price)) OVER (), 2) AS revenue_pct\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nORDER BY product_revenue DESC;",
+    "order_matters": true,
+    "explanation": "**SUM(oi.quantity * oi.unit_price)** computes total revenue per product. The window function **SUM(SUM(...)) OVER ()** nests an aggregate inside a window function — the inner SUM is the GROUP BY aggregate per product, and the outer SUM OVER () sums across all groups to get the grand total. Dividing and multiplying by 100 gives the percentage.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT p.name,\n       ROUND(SUM(oi.quantity * oi.unit_price), 2) AS product_revenue,\n       ROUND(100.0 * SUM(oi.quantity * oi.unit_price) / SUM(SUM(oi.quantity * oi.unit_price)) OVER (), 2) AS revenue_pct\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nORDER BY product_revenue DESC;",
+        "correct": true,
+        "explanation": "CORRECT. Nested SUM in window function correctly divides each product's revenue by the grand total for accurate percentage calculation."
+      },
+      {
+        "id": "B",
+        "text": "SELECT p.name,\n       ROUND(SUM(oi.quantity * oi.unit_price), 2) AS product_revenue,\n       ROUND(100.0 * SUM(oi.quantity * oi.unit_price) / SUM(oi.quantity * oi.unit_price) OVER (), 2) AS revenue_pct\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nORDER BY product_revenue DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. SUM(oi.quantity * oi.unit_price) OVER () without the outer aggregate SUM wrapper divides a grouped aggregate by a row-level window, which is semantically incorrect and may cause an error."
+      },
+      {
+        "id": "C",
+        "text": "SELECT p.name,\n       ROUND(SUM(oi.quantity * oi.unit_price), 2) AS product_revenue,\n       ROUND(100.0 * SUM(oi.quantity * oi.unit_price) / (SELECT SUM(quantity * unit_price) FROM order_items), 2) AS revenue_pct\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nORDER BY product_revenue DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. While a scalar subquery can compute the grand total, this is not the window function approach requested by the question."
+      },
+      {
+        "id": "D",
+        "text": "SELECT p.name,\n       ROUND(SUM(oi.quantity * oi.unit_price), 2) AS product_revenue,\n       ROUND(100.0 * SUM(oi.quantity * oi.unit_price) / SUM(SUM(oi.quantity * oi.unit_price)) OVER (PARTITION BY p.name), 2) AS revenue_pct\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nORDER BY product_revenue DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. PARTITION BY p.name divides the window per product, making the denominator equal to the numerator for each product, so every product always shows 100% revenue share."
+      }
+    ]
+  },
+  {
+    "id": 122,
+    "title": "Department Salary as Percentage of Budget",
+    "difficulty": "Medium",
+    "category": "Joins",
+    "description": "Finance needs to know what percentage of each department's budget is consumed by salaries. This metric helps assess compensation sustainability across departments.",
+    "question": "Write a query joining departments to employees (INNER JOIN) that returns department_name, total salary as total_salary (rounded to 2 decimals), budget, and the salary-to-budget percentage as salary_pct (100 * total_salary / budget, rounded to 1 decimal). Only departments with employees should appear (3 rows). Order by salary_pct descending.",
+    "hint": "INNER JOIN departments to employees on department_id, GROUP BY department, SUM(salary), and compute 100.0 * SUM(salary) / budget.",
+    "table_names": [
+      "departments",
+      "employees"
+    ],
+    "correct_query": "SELECT d.department_name,\n       ROUND(SUM(e.salary), 2) AS total_salary,\n       d.budget,\n       ROUND(100.0 * SUM(e.salary) / d.budget, 1) AS salary_pct\nFROM departments d\nJOIN employees e ON d.department_id = e.department_id\nGROUP BY d.department_name, d.budget\nORDER BY salary_pct DESC;",
+    "order_matters": true,
+    "explanation": "**INNER JOIN** ensures only departments with employees appear, naturally excluding HR. **GROUP BY d.department_name, d.budget** groups by department (budget must be in GROUP BY since it is not aggregated). **SUM(e.salary)** totals salaries per department. **100.0 * SUM(e.salary) / d.budget** computes the percentage. Marketing (222k/350k budget) has the highest ratio.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT d.department_name,\n       ROUND(SUM(e.salary), 2) AS total_salary,\n       d.budget,\n       ROUND(100.0 * SUM(e.salary) / d.budget, 1) AS salary_pct\nFROM departments d\nJOIN employees e ON d.department_id = e.department_id\nGROUP BY d.department_name, d.budget\nORDER BY salary_pct DESC;",
+        "correct": true,
+        "explanation": "CORRECT. INNER JOIN excludes HR, GROUP BY includes budget for division, and 100.0 ensures decimal division for the percentage."
+      },
+      {
+        "id": "B",
+        "text": "SELECT d.department_name,\n       ROUND(SUM(e.salary), 2) AS total_salary,\n       d.budget,\n       ROUND(100.0 * SUM(e.salary) / d.budget, 1) AS salary_pct\nFROM departments d\nLEFT JOIN employees e ON d.department_id = e.department_id\nGROUP BY d.department_name, d.budget\nORDER BY salary_pct DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. LEFT JOIN includes HR with NULL salaries; SUM of NULLs is NULL, so HR's salary_pct would be NULL and the result has 4 rows instead of 3."
+      },
+      {
+        "id": "C",
+        "text": "SELECT d.department_name,\n       ROUND(SUM(e.salary), 2) AS total_salary,\n       d.budget,\n       ROUND(100 * SUM(e.salary) / d.budget, 1) AS salary_pct\nFROM departments d\nJOIN employees e ON d.department_id = e.department_id\nGROUP BY d.department_name, d.budget\nORDER BY salary_pct DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Using integer 100 instead of 100.0 may cause integer division in some SQL dialects, truncating the result to a whole number percentage."
+      },
+      {
+        "id": "D",
+        "text": "SELECT d.department_name,\n       ROUND(SUM(e.salary), 2) AS total_salary,\n       d.budget,\n       ROUND(100.0 * SUM(e.salary) / d.budget, 1) AS salary_pct\nFROM departments d\nJOIN employees e ON d.department_id = e.department_id\nGROUP BY d.department_name\nORDER BY salary_pct DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. GROUP BY d.department_name without including d.budget means budget is a non-aggregated, non-grouped column in the SELECT, which causes an error in standard SQL."
+      }
+    ]
+  },
+  {
+    "id": 123,
+    "title": "Employee Salary Quartiles",
+    "difficulty": "Medium",
+    "category": "Window Functions",
+    "description": "The compensation team wants to divide employees into four equal salary groups (quartiles) to benchmark pay equity across departments. NTILE is the ideal window function for this purpose.",
+    "question": "Write a query joining employees to departments that returns employee name, department_name, salary, and salary_quartile using NTILE(4) OVER (ORDER BY salary). Order by salary ascending.",
+    "hint": "Use NTILE(4) OVER (ORDER BY salary) AS salary_quartile, join employees to departments for department names.",
+    "table_names": [
+      "employees",
+      "departments"
+    ],
+    "correct_query": "SELECT e.name,\n       d.department_name,\n       e.salary,\n       NTILE(4) OVER (ORDER BY e.salary) AS salary_quartile\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nORDER BY e.salary;",
+    "order_matters": true,
+    "explanation": "**NTILE(4)** divides the result set into 4 roughly equal buckets ordered by salary. With 10 employees, buckets are distributed as evenly as possible (3, 3, 2, 2 or similar). The lowest earners are in quartile 1, highest in quartile 4. **ORDER BY e.salary** in the OVER clause determines the distribution.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT e.name,\n       d.department_name,\n       e.salary,\n       NTILE(4) OVER (ORDER BY e.salary) AS salary_quartile\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nORDER BY e.salary;",
+        "correct": true,
+        "explanation": "CORRECT. NTILE(4) over salary order correctly assigns quartile labels 1-4 to all 10 employees."
+      },
+      {
+        "id": "B",
+        "text": "SELECT e.name,\n       d.department_name,\n       e.salary,\n       NTILE(4) OVER (PARTITION BY d.department_name ORDER BY e.salary) AS salary_quartile\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nORDER BY e.salary;",
+        "correct": false,
+        "explanation": "INCORRECT. PARTITION BY department_name computes quartiles within each department separately, not across all employees globally as required."
+      },
+      {
+        "id": "C",
+        "text": "SELECT e.name,\n       d.department_name,\n       e.salary,\n       NTILE(4) OVER (ORDER BY e.salary DESC) AS salary_quartile\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nORDER BY e.salary;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY salary DESC reverses the quartile assignment, putting the highest earners in quartile 1 instead of quartile 4."
+      },
+      {
+        "id": "D",
+        "text": "SELECT e.name,\n       d.department_name,\n       e.salary,\n       NTILE(5) OVER (ORDER BY e.salary) AS salary_quartile\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nORDER BY e.salary;",
+        "correct": false,
+        "explanation": "INCORRECT. NTILE(5) creates 5 quintile buckets rather than 4 quartile buckets as required."
+      }
+    ]
+  },
+  {
+    "id": 124,
+    "title": "Employees Earning Above Their Department Average",
+    "difficulty": "Medium",
+    "category": "CTEs (Common Table Expressions)",
+    "description": "Compensation analysts want to find employees who are paid more than the average salary in their own department. This helps identify outliers and inform promotion discussions.",
+    "question": "Write a query using a CTE that calculates the average salary per department_id as dept_avg. Then join the CTE back to employees and departments to return employee name, department_name, salary, and dept_avg (rounded to 2 decimals) for employees whose salary exceeds their department average. Order by department_name, then salary descending.",
+    "hint": "CTE: SELECT department_id, AVG(salary) AS dept_avg FROM employees GROUP BY department_id. Then join and filter WHERE e.salary > da.dept_avg.",
+    "table_names": [
+      "employees",
+      "departments"
+    ],
+    "correct_query": "WITH dept_avg AS (\n    SELECT department_id,\n           AVG(salary) AS dept_avg\n    FROM employees\n    GROUP BY department_id\n)\nSELECT e.name,\n       d.department_name,\n       e.salary,\n       ROUND(da.dept_avg, 2) AS dept_avg\nFROM employees e\nJOIN dept_avg da ON e.department_id = da.department_id\nJOIN departments d ON e.department_id = d.department_id\nWHERE e.salary > da.dept_avg\nORDER BY d.department_name, e.salary DESC;",
+    "order_matters": false,
+    "explanation": "The **CTE** computes the average salary grouped by department. The outer query joins employees to both the CTE and the departments table. **WHERE e.salary > da.dept_avg** filters to only above-average earners. Engineering avg is ~87.5k (Alice 95k, Carol 95k above); Sales avg is ~106k (David 110k, Frank 110k above); Marketing avg is ~74k (Henry 78k above). 5 employees total.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "WITH dept_avg AS (\n    SELECT department_id,\n           AVG(salary) AS dept_avg\n    FROM employees\n    GROUP BY department_id\n)\nSELECT e.name,\n       d.department_name,\n       e.salary,\n       ROUND(da.dept_avg, 2) AS dept_avg\nFROM employees e\nJOIN dept_avg da ON e.department_id = da.department_id\nJOIN departments d ON e.department_id = d.department_id\nWHERE e.salary > da.dept_avg\nORDER BY d.department_name, e.salary DESC;",
+        "correct": true,
+        "explanation": "CORRECT. CTE computes dept averages, outer query joins and filters WHERE salary > dept_avg, returning 5 above-average employees."
+      },
+      {
+        "id": "B",
+        "text": "SELECT e.name,\n       d.department_name,\n       e.salary\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nWHERE e.salary > AVG(e.salary) OVER (PARTITION BY e.department_id)\nORDER BY d.department_name, e.salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Window functions cannot be used in a WHERE clause directly; this causes a syntax error. The CTE or a subquery approach is needed."
+      },
+      {
+        "id": "C",
+        "text": "WITH dept_avg AS (\n    SELECT department_id,\n           AVG(salary) AS dept_avg\n    FROM employees\n    GROUP BY department_id\n)\nSELECT e.name,\n       d.department_name,\n       e.salary,\n       ROUND(da.dept_avg, 2) AS dept_avg\nFROM employees e\nJOIN dept_avg da ON e.department_id = da.department_id\nJOIN departments d ON e.department_id = d.department_id\nWHERE e.salary >= da.dept_avg\nORDER BY d.department_name, e.salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. >= includes employees earning exactly the department average, which could add extra rows not intended (strictly above-average is required)."
+      },
+      {
+        "id": "D",
+        "text": "WITH dept_avg AS (\n    SELECT department_id,\n           AVG(salary) AS dept_avg\n    FROM employees\n    GROUP BY department_id\n)\nSELECT e.name,\n       d.department_name,\n       e.salary,\n       ROUND(da.dept_avg, 2) AS dept_avg\nFROM employees e\nCROSS JOIN dept_avg da\nJOIN departments d ON e.department_id = d.department_id\nWHERE e.salary > da.dept_avg\nORDER BY d.department_name, e.salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. CROSS JOIN pairs every employee with every department's average instead of joining on department_id, comparing each employee to all department averages rather than just their own."
+      }
+    ]
+  },
+  {
+    "id": 125,
+    "title": "Each Order's Value vs Customer Average",
+    "difficulty": "Medium",
+    "category": "Window Functions",
+    "description": "The analytics team wants to compare individual order values against each customer's typical spending pattern. This helps identify unusually large or small orders relative to that customer's history.",
+    "question": "Write a query joining customers to orders that returns customer name, order_id, order_date, total_amount, the customer's average order value as cust_avg_order (rounded to 2 decimals) using AVG() OVER (PARTITION BY customer_id), and the difference (total_amount - cust_avg) as diff_from_avg (rounded to 2 decimals). Order by customer name, then order_date.",
+    "hint": "Use AVG(total_amount) OVER (PARTITION BY o.customer_id) as the window function, then subtract it from total_amount.",
+    "table_names": [
+      "customers",
+      "orders"
+    ],
+    "correct_query": "SELECT c.name,\n       o.order_id,\n       o.order_date,\n       o.total_amount,\n       ROUND(AVG(o.total_amount) OVER (PARTITION BY o.customer_id), 2) AS cust_avg_order,\n       ROUND(o.total_amount - AVG(o.total_amount) OVER (PARTITION BY o.customer_id), 2) AS diff_from_avg\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nORDER BY c.name, o.order_date;",
+    "order_matters": true,
+    "explanation": "**AVG(o.total_amount) OVER (PARTITION BY o.customer_id)** computes each customer's average order value across all their orders, repeated on every row for that customer. Subtracting this from total_amount gives the deviation for each specific order. Positive values indicate above-average orders for that customer, negative values below-average.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT c.name,\n       o.order_id,\n       o.order_date,\n       o.total_amount,\n       ROUND(AVG(o.total_amount) OVER (PARTITION BY o.customer_id), 2) AS cust_avg_order,\n       ROUND(o.total_amount - AVG(o.total_amount) OVER (PARTITION BY o.customer_id), 2) AS diff_from_avg\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nORDER BY c.name, o.order_date;",
+        "correct": true,
+        "explanation": "CORRECT. AVG OVER PARTITION BY customer_id correctly computes per-customer averages as a window function, and the difference is computed correctly."
+      },
+      {
+        "id": "B",
+        "text": "SELECT c.name,\n       o.order_id,\n       o.order_date,\n       o.total_amount,\n       ROUND(AVG(o.total_amount) OVER (), 2) AS cust_avg_order,\n       ROUND(o.total_amount - AVG(o.total_amount) OVER (), 2) AS diff_from_avg\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nORDER BY c.name, o.order_date;",
+        "correct": false,
+        "explanation": "INCORRECT. AVG OVER () without PARTITION BY computes the global average across all orders, not per-customer, so every row shows the same average regardless of customer."
+      },
+      {
+        "id": "C",
+        "text": "SELECT c.name,\n       o.order_id,\n       o.order_date,\n       o.total_amount,\n       ROUND(AVG(o.total_amount) OVER (PARTITION BY c.name), 2) AS cust_avg_order,\n       ROUND(o.total_amount - AVG(o.total_amount) OVER (PARTITION BY c.name), 2) AS diff_from_avg\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nORDER BY c.name, o.order_date;",
+        "correct": false,
+        "explanation": "INCORRECT. PARTITION BY c.name works here since names are unique, but it is semantically wrong — partitioning should be done on the key (customer_id), not the display name."
+      },
+      {
+        "id": "D",
+        "text": "SELECT c.name,\n       o.order_id,\n       o.order_date,\n       o.total_amount,\n       ROUND(AVG(o.total_amount) OVER (PARTITION BY o.customer_id ORDER BY o.order_date), 2) AS cust_avg_order,\n       ROUND(o.total_amount - AVG(o.total_amount) OVER (PARTITION BY o.customer_id ORDER BY o.order_date), 2) AS diff_from_avg\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nORDER BY c.name, o.order_date;",
+        "correct": false,
+        "explanation": "INCORRECT. Adding ORDER BY o.order_date in the window makes it a running average (cumulative), not the full customer average; earlier orders would have different cust_avg than later ones."
+      }
+    ]
+  }
+]

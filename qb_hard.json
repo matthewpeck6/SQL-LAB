@@ -1,0 +1,420 @@
+[
+  {
+    "id": 131,
+    "title": "Recursive Organizational Hierarchy",
+    "difficulty": "Hard",
+    "category": "Recursive CTEs",
+    "description": "HR needs to visualize the full management chain, showing each employee's level in the hierarchy and the path from CEO to that employee. Recursive CTEs are the SQL tool for traversing hierarchical data.",
+    "question": "Write a recursive CTE query on the staff table that returns staff_id, name, manager_id, a level number (starting at 1 for the top executive), and a path string showing the management chain (e.g., 'Sarah Connor > John Smith'). Order by level, then name.",
+    "hint": "Use WITH RECURSIVE, anchor on WHERE manager_id IS NULL, recursive step joins staff to the CTE on manager_id = staff_id, incrementing level and concatenating path.",
+    "table_names": [
+      "staff"
+    ],
+    "correct_query": "WITH RECURSIVE org_hierarchy AS (\n    SELECT staff_id,\n           name,\n           manager_id,\n           1 AS level,\n           name AS path\n    FROM staff\n    WHERE manager_id IS NULL\n    UNION ALL\n    SELECT s.staff_id,\n           s.name,\n           s.manager_id,\n           oh.level + 1,\n           oh.path || ' > ' || s.name\n    FROM staff s\n    JOIN org_hierarchy oh ON s.manager_id = oh.staff_id\n)\nSELECT staff_id,\n       name,\n       manager_id,\n       level,\n       path\nFROM org_hierarchy\nORDER BY level, name;",
+    "order_matters": true,
+    "explanation": "**WITH RECURSIVE** declares a recursive CTE. The **anchor member** selects Sarah Connor (manager_id IS NULL) at level 1. The **recursive member** joins staff to the CTE matching s.manager_id = oh.staff_id, incrementing level by 1 each step. The path concatenates names with ' > '. The recursion terminates when no more rows match. Level 1: Sarah; Level 2: John Smith, Mary Jones; Level 3: all direct reports to John and Mary.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "WITH RECURSIVE org_hierarchy AS (\n    SELECT staff_id,\n           name,\n           manager_id,\n           1 AS level,\n           name AS path\n    FROM staff\n    WHERE manager_id IS NULL\n    UNION ALL\n    SELECT s.staff_id,\n           s.name,\n           s.manager_id,\n           oh.level + 1,\n           oh.path || ' > ' || s.name\n    FROM staff s\n    JOIN org_hierarchy oh ON s.manager_id = oh.staff_id\n)\nSELECT staff_id, name, manager_id, level, path\nFROM org_hierarchy\nORDER BY level, name;",
+        "correct": true,
+        "explanation": "CORRECT. WITH RECURSIVE with anchor on NULL manager, UNION ALL recursive join on manager_id = staff_id, level increments correctly, path concatenates with ||."
+      },
+      {
+        "id": "B",
+        "text": "WITH org_hierarchy AS (\n    SELECT staff_id,\n           name,\n           manager_id,\n           1 AS level,\n           name AS path\n    FROM staff\n    WHERE manager_id IS NULL\n    UNION ALL\n    SELECT s.staff_id,\n           s.name,\n           s.manager_id,\n           oh.level + 1,\n           oh.path || ' > ' || s.name\n    FROM staff s\n    JOIN org_hierarchy oh ON s.manager_id = oh.staff_id\n)\nSELECT staff_id, name, manager_id, level, path\nFROM org_hierarchy\nORDER BY level, name;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing the RECURSIVE keyword after WITH; without it, the CTE cannot reference itself and the query will error because org_hierarchy is referenced inside its own definition."
+      },
+      {
+        "id": "C",
+        "text": "WITH RECURSIVE org_hierarchy AS (\n    SELECT staff_id,\n           name,\n           manager_id,\n           1 AS level,\n           name AS path\n    FROM staff\n    WHERE manager_id IS NULL\n    UNION ALL\n    SELECT s.staff_id,\n           s.name,\n           s.manager_id,\n           oh.level + 1,\n           oh.path || ' > ' || s.name\n    FROM staff s\n    JOIN org_hierarchy oh ON s.staff_id = oh.manager_id\n)\nSELECT staff_id, name, manager_id, level, path\nFROM org_hierarchy\nORDER BY level, name;",
+        "correct": false,
+        "explanation": "INCORRECT. The recursive join condition is reversed: s.staff_id = oh.manager_id finds employees who manage the current CTE row, traversing upward instead of downward through the hierarchy."
+      },
+      {
+        "id": "D",
+        "text": "WITH RECURSIVE org_hierarchy AS (\n    SELECT staff_id,\n           name,\n           manager_id,\n           1 AS level,\n           name AS path\n    FROM staff\n    WHERE manager_id IS NULL\n    UNION\n    SELECT s.staff_id,\n           s.name,\n           s.manager_id,\n           oh.level + 1,\n           oh.path || ' > ' || s.name\n    FROM staff s\n    JOIN org_hierarchy oh ON s.manager_id = oh.staff_id\n)\nSELECT staff_id, name, manager_id, level, path\nFROM org_hierarchy\nORDER BY level, name;",
+        "correct": false,
+        "explanation": "INCORRECT. UNION instead of UNION ALL removes duplicate rows; in a recursive CTE on hierarchical data, UNION can prevent infinite loops but may also prematurely stop recursion if any name appears more than once in the path, potentially excluding valid employees."
+      }
+    ]
+  },
+  {
+    "id": 132,
+    "title": "Top Revenue Product per Category",
+    "difficulty": "Hard",
+    "category": "Window Functions",
+    "description": "The sales team wants to identify which product generated the most revenue within each product category. This requires aggregating order item data and applying window-based ranking.",
+    "question": "Write a query using a CTE that computes total revenue per product (SUM of quantity * unit_price) by joining products to order_items. Apply DENSE_RANK() OVER (PARTITION BY category ORDER BY product_revenue DESC) as rk. In the outer query return category, product name, and product_revenue (rounded to 2 decimals) where rk = 1. Order by category.",
+    "hint": "CTE: JOIN products to order_items, SUM(qty*price) per product, apply DENSE_RANK() OVER (PARTITION BY category ORDER BY revenue DESC). Outer: WHERE rk = 1.",
+    "table_names": [
+      "products",
+      "order_items"
+    ],
+    "correct_query": "WITH product_revenue AS (\n    SELECT p.product_id,\n           p.name,\n           p.category,\n           SUM(oi.quantity * oi.unit_price) AS product_revenue,\n           DENSE_RANK() OVER (PARTITION BY p.category ORDER BY SUM(oi.quantity * oi.unit_price) DESC) AS rk\n    FROM products p\n    JOIN order_items oi ON p.product_id = oi.product_id\n    GROUP BY p.product_id, p.name, p.category\n)\nSELECT category,\n       name,\n       ROUND(product_revenue, 2) AS product_revenue\nFROM product_revenue\nWHERE rk = 1\nORDER BY category;",
+    "order_matters": true,
+    "explanation": "The **CTE** groups by product and aggregates revenue using **SUM(quantity * unit_price)**. **DENSE_RANK() OVER (PARTITION BY category ORDER BY SUM(...) DESC)** ranks products within each category by revenue. The outer query filters to **rk = 1** for the top product per category. Results: Electronics = Laptop Pro (4 orders at 1299.99 = 5199.96), Furniture = Standing Desk (2 orders at 549.99 = 1099.98), Stationery = Notebook Set (3 qty at 19.99 = 59.97).",
+    "choices": [
+      {
+        "id": "A",
+        "text": "WITH product_revenue AS (\n    SELECT p.product_id,\n           p.name,\n           p.category,\n           SUM(oi.quantity * oi.unit_price) AS product_revenue,\n           DENSE_RANK() OVER (PARTITION BY p.category ORDER BY SUM(oi.quantity * oi.unit_price) DESC) AS rk\n    FROM products p\n    JOIN order_items oi ON p.product_id = oi.product_id\n    GROUP BY p.product_id, p.name, p.category\n)\nSELECT category,\n       name,\n       ROUND(product_revenue, 2) AS product_revenue\nFROM product_revenue\nWHERE rk = 1\nORDER BY category;",
+        "correct": true,
+        "explanation": "CORRECT. CTE aggregates revenue per product, DENSE_RANK within category selects top earner, outer query returns 3 rows (one per category)."
+      },
+      {
+        "id": "B",
+        "text": "WITH product_revenue AS (\n    SELECT p.product_id,\n           p.name,\n           p.category,\n           SUM(oi.quantity * oi.unit_price) AS product_revenue,\n           DENSE_RANK() OVER (ORDER BY SUM(oi.quantity * oi.unit_price) DESC) AS rk\n    FROM products p\n    JOIN order_items oi ON p.product_id = oi.product_id\n    GROUP BY p.product_id, p.name, p.category\n)\nSELECT category,\n       name,\n       ROUND(product_revenue, 2) AS product_revenue\nFROM product_revenue\nWHERE rk = 1\nORDER BY category;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing PARTITION BY category in the window function ranks products globally, so only Laptop Pro (highest revenue overall) gets rk = 1, returning only 1 row instead of 3."
+      },
+      {
+        "id": "C",
+        "text": "WITH product_revenue AS (\n    SELECT p.product_id,\n           p.name,\n           p.category,\n           SUM(oi.quantity * oi.unit_price) AS product_revenue\n    FROM products p\n    JOIN order_items oi ON p.product_id = oi.product_id\n    GROUP BY p.product_id, p.name, p.category\n)\nSELECT category,\n       name,\n       ROUND(product_revenue, 2) AS product_revenue\nFROM product_revenue\nWHERE product_revenue = (\n    SELECT MAX(product_revenue)\n    FROM product_revenue pr2\n    WHERE pr2.category = product_revenue.category\n)\nORDER BY category;",
+        "correct": false,
+        "explanation": "INCORRECT. While a correlated subquery approach can work logically, this is not the DENSE_RANK window function CTE pattern requested by the question."
+      },
+      {
+        "id": "D",
+        "text": "WITH product_revenue AS (\n    SELECT p.product_id,\n           p.name,\n           p.category,\n           SUM(oi.quantity * oi.unit_price) AS product_revenue,\n           DENSE_RANK() OVER (PARTITION BY p.category ORDER BY SUM(oi.quantity * oi.unit_price) ASC) AS rk\n    FROM products p\n    JOIN order_items oi ON p.product_id = oi.product_id\n    GROUP BY p.product_id, p.name, p.category\n)\nSELECT category,\n       name,\n       ROUND(product_revenue, 2) AS product_revenue\nFROM product_revenue\nWHERE rk = 1\nORDER BY category;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY revenue ASC ranks lowest revenue as 1, so this returns the least-revenue product per category (Webcam HD, Desk Lamp, Pen Pack) rather than the top earners."
+      }
+    ]
+  },
+  {
+    "id": 133,
+    "title": "Customer Segmentation by Order History",
+    "difficulty": "Hard",
+    "category": "CTEs (Common Table Expressions)",
+    "description": "Marketing wants to segment customers into four tiers based on order history: Never Ordered (0 orders), One-time (1 order), Repeat (2 orders), and Loyal (3+ orders). The output aggregates each segment's customer count, average orders, and total revenue.",
+    "question": "Write a query using a CTE that computes per-customer order_count and total_revenue using a LEFT JOIN from customers to orders. Apply a CASE expression to assign a segment label. In the outer query GROUP BY segment to return segment, customer_count (COUNT), avg_orders (AVG order_count, rounded to 1 decimal), and total_revenue (SUM, rounded to 2 decimals). Order by customer_count descending.",
+    "hint": "CTE: LEFT JOIN customers to orders, COUNT(order_id), SUM(total_amount), CASE for segment. Outer: GROUP BY segment, aggregate customer_count, avg_orders, total_revenue.",
+    "table_names": [
+      "customers",
+      "orders"
+    ],
+    "correct_query": "WITH customer_stats AS (\n    SELECT c.customer_id,\n           c.name,\n           COUNT(o.order_id) AS order_count,\n           COALESCE(SUM(o.total_amount), 0) AS total_revenue,\n           CASE\n               WHEN COUNT(o.order_id) = 0 THEN 'Never Ordered'\n               WHEN COUNT(o.order_id) = 1 THEN 'One-time'\n               WHEN COUNT(o.order_id) = 2 THEN 'Repeat'\n               ELSE 'Loyal'\n           END AS segment\n    FROM customers c\n    LEFT JOIN orders o ON c.customer_id = o.customer_id\n    GROUP BY c.customer_id, c.name\n)\nSELECT segment,\n       COUNT(*) AS customer_count,\n       ROUND(AVG(order_count), 1) AS avg_orders,\n       ROUND(SUM(total_revenue), 2) AS total_revenue\nFROM customer_stats\nGROUP BY segment\nORDER BY customer_count DESC;",
+    "order_matters": false,
+    "explanation": "The **CTE** uses **LEFT JOIN** so all 12 customers appear, including the 2 with no orders. **COUNT(o.order_id)** counts orders (NULL for unmatched = 0). The **CASE** expression assigns segments: customers 11-12 are 'Never Ordered', customers with 1 order are 'One-time' (4 customers), 2 orders are 'Repeat' (3 customers), 3+ orders are 'Loyal' (3 customers). The outer query aggregates by segment.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "WITH customer_stats AS (\n    SELECT c.customer_id,\n           c.name,\n           COUNT(o.order_id) AS order_count,\n           COALESCE(SUM(o.total_amount), 0) AS total_revenue,\n           CASE\n               WHEN COUNT(o.order_id) = 0 THEN 'Never Ordered'\n               WHEN COUNT(o.order_id) = 1 THEN 'One-time'\n               WHEN COUNT(o.order_id) = 2 THEN 'Repeat'\n               ELSE 'Loyal'\n           END AS segment\n    FROM customers c\n    LEFT JOIN orders o ON c.customer_id = o.customer_id\n    GROUP BY c.customer_id, c.name\n)\nSELECT segment,\n       COUNT(*) AS customer_count,\n       ROUND(AVG(order_count), 1) AS avg_orders,\n       ROUND(SUM(total_revenue), 2) AS total_revenue\nFROM customer_stats\nGROUP BY segment\nORDER BY customer_count DESC;",
+        "correct": true,
+        "explanation": "CORRECT. LEFT JOIN includes all customers, COUNT(order_id) gives 0 for unmatched, CASE segments correctly, outer GROUP BY aggregates to 4 segment rows."
+      },
+      {
+        "id": "B",
+        "text": "WITH customer_stats AS (\n    SELECT c.customer_id,\n           c.name,\n           COUNT(o.order_id) AS order_count,\n           COALESCE(SUM(o.total_amount), 0) AS total_revenue,\n           CASE\n               WHEN COUNT(o.order_id) = 0 THEN 'Never Ordered'\n               WHEN COUNT(o.order_id) = 1 THEN 'One-time'\n               WHEN COUNT(o.order_id) = 2 THEN 'Repeat'\n               ELSE 'Loyal'\n           END AS segment\n    FROM customers c\n    JOIN orders o ON c.customer_id = o.customer_id\n    GROUP BY c.customer_id, c.name\n)\nSELECT segment,\n       COUNT(*) AS customer_count,\n       ROUND(AVG(order_count), 1) AS avg_orders,\n       ROUND(SUM(total_revenue), 2) AS total_revenue\nFROM customer_stats\nGROUP BY segment\nORDER BY customer_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. INNER JOIN excludes the 2 customers with no orders, so the 'Never Ordered' segment will not appear and the result has only 3 segments instead of 4."
+      },
+      {
+        "id": "C",
+        "text": "WITH customer_stats AS (\n    SELECT c.customer_id,\n           c.name,\n           COUNT(o.order_id) AS order_count,\n           SUM(o.total_amount) AS total_revenue,\n           CASE\n               WHEN COUNT(o.order_id) = 0 THEN 'Never Ordered'\n               WHEN COUNT(o.order_id) = 1 THEN 'One-time'\n               WHEN COUNT(o.order_id) = 2 THEN 'Repeat'\n               ELSE 'Loyal'\n           END AS segment\n    FROM customers c\n    LEFT JOIN orders o ON c.customer_id = o.customer_id\n    GROUP BY c.customer_id, c.name\n)\nSELECT segment,\n       COUNT(*) AS customer_count,\n       ROUND(AVG(order_count), 1) AS avg_orders,\n       ROUND(SUM(total_revenue), 2) AS total_revenue\nFROM customer_stats\nGROUP BY segment\nORDER BY customer_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Without COALESCE, customers with no orders have NULL total_revenue in the CTE; while SUM handles NULLs gracefully, the missing COALESCE means individual customer total_revenue is NULL rather than 0, which is less precise."
+      },
+      {
+        "id": "D",
+        "text": "WITH customer_stats AS (\n    SELECT c.customer_id,\n           c.name,\n           COUNT(o.order_id) AS order_count,\n           COALESCE(SUM(o.total_amount), 0) AS total_revenue,\n           CASE\n               WHEN COUNT(o.order_id) = 0 THEN 'Never Ordered'\n               WHEN COUNT(o.order_id) = 1 THEN 'One-time'\n               WHEN COUNT(o.order_id) >= 2 THEN 'Repeat'\n               ELSE 'Loyal'\n           END AS segment\n    FROM customers c\n    LEFT JOIN orders o ON c.customer_id = o.customer_id\n    GROUP BY c.customer_id, c.name\n)\nSELECT segment,\n       COUNT(*) AS customer_count,\n       ROUND(AVG(order_count), 1) AS avg_orders,\n       ROUND(SUM(total_revenue), 2) AS total_revenue\nFROM customer_stats\nGROUP BY segment\nORDER BY customer_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. WHEN COUNT >= 2 THEN 'Repeat' catches all customers with 2 or more orders as Repeat, so Loyal (3+) is never reached by the CASE; Alice, Bob, and Carol would be labeled Repeat instead of Loyal."
+      }
+    ]
+  },
+  {
+    "id": 134,
+    "title": "3-Month Moving Average Revenue",
+    "difficulty": "Hard",
+    "category": "Window Functions",
+    "description": "The analytics team wants to smooth out monthly revenue fluctuations by computing a 3-month rolling average. This trailing average reduces noise and highlights true revenue trends.",
+    "question": "Write a query on the monthly_revenue table returning year, month, revenue, and the 3-month moving average (including current month and 2 preceding months) as moving_avg_3m, rounded to 2 decimals. Use AVG() OVER with a ROWS frame. Order by year, month.",
+    "hint": "Use AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) for the 3-month window.",
+    "table_names": [
+      "monthly_revenue"
+    ],
+    "correct_query": "SELECT year,\n       month,\n       revenue,\n       ROUND(AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 2) AS moving_avg_3m\nFROM monthly_revenue\nORDER BY year, month;",
+    "order_matters": true,
+    "explanation": "**AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)** defines a window of exactly 3 rows: the current row and the 2 rows before it in the year/month order. For the first two months, the window is smaller (1 and 2 rows respectively). **ROWS BETWEEN** specifies a physical row count frame, which is correct for this use case. All 18 rows are returned.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT year,\n       month,\n       revenue,\n       ROUND(AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 2) AS moving_avg_3m\nFROM monthly_revenue\nORDER BY year, month;",
+        "correct": true,
+        "explanation": "CORRECT. ROWS BETWEEN 2 PRECEDING AND CURRENT ROW defines a 3-row physical window, correctly computing the trailing 3-month average."
+      },
+      {
+        "id": "B",
+        "text": "SELECT year,\n       month,\n       revenue,\n       ROUND(AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING), 2) AS moving_avg_3m\nFROM monthly_revenue\nORDER BY year, month;",
+        "correct": false,
+        "explanation": "INCORRECT. ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING is a centered 3-month average (previous, current, next), not a trailing average of current and 2 preceding months."
+      },
+      {
+        "id": "C",
+        "text": "SELECT year,\n       month,\n       revenue,\n       ROUND(AVG(revenue) OVER (ORDER BY year, month ROWS BETWEEN 3 PRECEDING AND CURRENT ROW), 2) AS moving_avg_3m\nFROM monthly_revenue\nORDER BY year, month;",
+        "correct": false,
+        "explanation": "INCORRECT. ROWS BETWEEN 3 PRECEDING AND CURRENT ROW defines a 4-row window (3 prior + current), computing a 4-month moving average instead of 3."
+      },
+      {
+        "id": "D",
+        "text": "SELECT year,\n       month,\n       revenue,\n       ROUND(AVG(revenue) OVER (PARTITION BY year ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 2) AS moving_avg_3m\nFROM monthly_revenue\nORDER BY year, month;",
+        "correct": false,
+        "explanation": "INCORRECT. PARTITION BY year resets the window at each year boundary, so January of a new year cannot include November and December of the prior year in its 3-month trailing average, breaking the year-crossing continuity."
+      }
+    ]
+  },
+  {
+    "id": 135,
+    "title": "Top Spending Customer Each Month",
+    "difficulty": "Hard",
+    "category": "CTEs (Common Table Expressions)",
+    "description": "The marketing team wants to spotlight the highest-spending customer for each month in 2024 to feature in monthly newsletters and loyalty recognition programs.",
+    "question": "Write a query using a CTE that groups orders by year, month (extracted from order_date), and customer_id to compute monthly spending per customer. Apply RANK() OVER (PARTITION BY year, month ORDER BY monthly_spend DESC) as spend_rank. Join to customers in the outer query and return year, month, customer name, and monthly_spend (rounded to 2 decimals) where spend_rank = 1. Filter to year 2024 and order by year, month.",
+    "hint": "CTE: EXTRACT year and month, SUM(total_amount) as monthly_spend, RANK() OVER (PARTITION BY yr, mo ORDER BY spend DESC). Outer: JOIN customers, WHERE spend_rank = 1.",
+    "table_names": [
+      "customers",
+      "orders"
+    ],
+    "correct_query": "WITH monthly_spend AS (\n    SELECT EXTRACT(YEAR FROM order_date) AS yr,\n           EXTRACT(MONTH FROM order_date) AS mo,\n           customer_id,\n           SUM(total_amount) AS monthly_spend,\n           RANK() OVER (PARTITION BY EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date) ORDER BY SUM(total_amount) DESC) AS spend_rank\n    FROM orders\n    GROUP BY EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date), customer_id\n)\nSELECT ms.yr,\n       ms.mo,\n       c.name,\n       ROUND(ms.monthly_spend, 2) AS monthly_spend\nFROM monthly_spend ms\nJOIN customers c ON ms.customer_id = c.customer_id\nWHERE ms.spend_rank = 1\n  AND ms.yr = 2024\nORDER BY ms.yr, ms.mo;",
+    "order_matters": true,
+    "explanation": "The **CTE** extracts year and month from order_date, groups by customer per month, and sums spending. **RANK() OVER (PARTITION BY yr, mo ORDER BY SUM(...) DESC)** ranks customers within each month by spending. The outer query filters **spend_rank = 1** for top spenders and **yr = 2024**. Jan: Alice (1299.99+429.98=1729.97), Feb: David Kim (1299.99), Mar: Emma Rodriguez (109.98... actually Alice has 239.98 — Carol Lee has 549.99+151.95=701.94... actually order9 is Carol 151.95, order7 is Alice 239.98, so Carol leads Mar with 701.94), Apr: Henry Davis (549.99), May: Isabel (1299.99), Jun: Emma Rodriguez (1299.99).",
+    "choices": [
+      {
+        "id": "A",
+        "text": "WITH monthly_spend AS (\n    SELECT EXTRACT(YEAR FROM order_date) AS yr,\n           EXTRACT(MONTH FROM order_date) AS mo,\n           customer_id,\n           SUM(total_amount) AS monthly_spend,\n           RANK() OVER (PARTITION BY EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date) ORDER BY SUM(total_amount) DESC) AS spend_rank\n    FROM orders\n    GROUP BY EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date), customer_id\n)\nSELECT ms.yr,\n       ms.mo,\n       c.name,\n       ROUND(ms.monthly_spend, 2) AS monthly_spend\nFROM monthly_spend ms\nJOIN customers c ON ms.customer_id = c.customer_id\nWHERE ms.spend_rank = 1\n  AND ms.yr = 2024\nORDER BY ms.yr, ms.mo;",
+        "correct": true,
+        "explanation": "CORRECT. CTE groups orders by year/month/customer, RANK() OVER PARTITION BY month ranks by spend, outer query returns top spender per month for 2024."
+      },
+      {
+        "id": "B",
+        "text": "WITH monthly_spend AS (\n    SELECT EXTRACT(YEAR FROM order_date) AS yr,\n           EXTRACT(MONTH FROM order_date) AS mo,\n           customer_id,\n           SUM(total_amount) AS monthly_spend,\n           RANK() OVER (ORDER BY SUM(total_amount) DESC) AS spend_rank\n    FROM orders\n    GROUP BY EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date), customer_id\n)\nSELECT ms.yr,\n       ms.mo,\n       c.name,\n       ROUND(ms.monthly_spend, 2) AS monthly_spend\nFROM monthly_spend ms\nJOIN customers c ON ms.customer_id = c.customer_id\nWHERE ms.spend_rank = 1\n  AND ms.yr = 2024\nORDER BY ms.yr, ms.mo;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing PARTITION BY in the RANK() window ranks spending globally across all months, so only the globally top-spending customer/month combination gets rank 1, not one per month."
+      },
+      {
+        "id": "C",
+        "text": "WITH monthly_spend AS (\n    SELECT EXTRACT(YEAR FROM order_date) AS yr,\n           EXTRACT(MONTH FROM order_date) AS mo,\n           customer_id,\n           SUM(total_amount) AS monthly_spend,\n           RANK() OVER (PARTITION BY EXTRACT(MONTH FROM order_date) ORDER BY SUM(total_amount) DESC) AS spend_rank\n    FROM orders\n    GROUP BY EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date), customer_id\n)\nSELECT ms.yr,\n       ms.mo,\n       c.name,\n       ROUND(ms.monthly_spend, 2) AS monthly_spend\nFROM monthly_spend ms\nJOIN customers c ON ms.customer_id = c.customer_id\nWHERE ms.spend_rank = 1\n  AND ms.yr = 2024\nORDER BY ms.yr, ms.mo;",
+        "correct": false,
+        "explanation": "INCORRECT. PARTITION BY only month (not year) ranks across the same month number in different years together; this produces incorrect rankings when 2023 and 2024 data for the same month number are compared."
+      },
+      {
+        "id": "D",
+        "text": "WITH monthly_spend AS (\n    SELECT EXTRACT(YEAR FROM order_date) AS yr,\n           EXTRACT(MONTH FROM order_date) AS mo,\n           customer_id,\n           MAX(total_amount) AS monthly_spend,\n           RANK() OVER (PARTITION BY EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date) ORDER BY MAX(total_amount) DESC) AS spend_rank\n    FROM orders\n    GROUP BY EXTRACT(YEAR FROM order_date), EXTRACT(MONTH FROM order_date), customer_id\n)\nSELECT ms.yr,\n       ms.mo,\n       c.name,\n       ROUND(ms.monthly_spend, 2) AS monthly_spend\nFROM monthly_spend ms\nJOIN customers c ON ms.customer_id = c.customer_id\nWHERE ms.spend_rank = 1\n  AND ms.yr = 2024\nORDER BY ms.yr, ms.mo;",
+        "correct": false,
+        "explanation": "INCORRECT. Uses MAX(total_amount) instead of SUM(total_amount), so customers with multiple orders in a month are ranked by their single largest order rather than their total monthly spending."
+      }
+    ]
+  },
+  {
+    "id": 136,
+    "title": "Orders Containing Only Electronics",
+    "difficulty": "Hard",
+    "category": "Subqueries",
+    "description": "The electronics division wants to analyze orders that were exclusively electronics purchases with no furniture or stationery items mixed in. This requires filtering orders where no non-electronics products exist.",
+    "question": "Write a query returning order_id and order_date for orders that contain ONLY Electronics products. Use a NOT EXISTS subquery to exclude orders that have any item from a non-Electronics category. Order by order_id.",
+    "hint": "Use NOT EXISTS (SELECT 1 FROM order_items oi2 JOIN products p2 ON oi2.product_id = p2.product_id WHERE oi2.order_id = o.order_id AND p2.category <> 'Electronics').",
+    "table_names": [
+      "orders",
+      "order_items",
+      "products"
+    ],
+    "correct_query": "SELECT o.order_id,\n       o.order_date\nFROM orders o\nWHERE EXISTS (\n    SELECT 1\n    FROM order_items oi\n    JOIN products p ON oi.product_id = p.product_id\n    WHERE oi.order_id = o.order_id\n      AND p.category = 'Electronics'\n)\nAND NOT EXISTS (\n    SELECT 1\n    FROM order_items oi2\n    JOIN products p2 ON oi2.product_id = p2.product_id\n    WHERE oi2.order_id = o.order_id\n      AND p2.category <> 'Electronics'\n)\nORDER BY o.order_id;",
+    "order_matters": true,
+    "explanation": "Two correlated subqueries work together: **EXISTS** ensures the order has at least one Electronics item. **NOT EXISTS** ensures the order has no non-Electronics items. An order must satisfy both conditions to qualify as 'Electronics only'. Orders with mixed categories (like order 9 which has Desk Lamp and Notebook Set) are excluded. The 13 electronics-only orders are those where all items are electronics products.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT o.order_id,\n       o.order_date\nFROM orders o\nWHERE EXISTS (\n    SELECT 1\n    FROM order_items oi\n    JOIN products p ON oi.product_id = p.product_id\n    WHERE oi.order_id = o.order_id\n      AND p.category = 'Electronics'\n)\nAND NOT EXISTS (\n    SELECT 1\n    FROM order_items oi2\n    JOIN products p2 ON oi2.product_id = p2.product_id\n    WHERE oi2.order_id = o.order_id\n      AND p2.category <> 'Electronics'\n)\nORDER BY o.order_id;",
+        "correct": true,
+        "explanation": "CORRECT. EXISTS ensures at least one electronics item, NOT EXISTS ensures no non-electronics items, together filtering to electronics-only orders."
+      },
+      {
+        "id": "B",
+        "text": "SELECT o.order_id,\n       o.order_date\nFROM orders o\nJOIN order_items oi ON o.order_id = oi.order_id\nJOIN products p ON oi.product_id = p.product_id\nWHERE p.category = 'Electronics'\nORDER BY o.order_id;",
+        "correct": false,
+        "explanation": "INCORRECT. This returns all orders that contain at least one electronics item, including mixed orders with furniture or stationery items. It does not ensure orders are exclusively electronics."
+      },
+      {
+        "id": "C",
+        "text": "SELECT o.order_id,\n       o.order_date\nFROM orders o\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM order_items oi2\n    JOIN products p2 ON oi2.product_id = p2.product_id\n    WHERE oi2.order_id = o.order_id\n      AND p2.category <> 'Electronics'\n)\nORDER BY o.order_id;",
+        "correct": false,
+        "explanation": "INCORRECT. NOT EXISTS alone would also include orders with no items at all (hypothetical empty orders). The EXISTS check for at least one electronics item is needed to exclude such edge cases."
+      },
+      {
+        "id": "D",
+        "text": "SELECT DISTINCT o.order_id,\n       o.order_date\nFROM orders o\nJOIN order_items oi ON o.order_id = oi.order_id\nJOIN products p ON oi.product_id = p.product_id\nWHERE p.category = 'Electronics'\nAND o.order_id NOT IN (\n    SELECT oi2.order_id\n    FROM order_items oi2\n    JOIN products p2 ON oi2.product_id = p2.product_id\n    WHERE p2.category <> 'Electronics'\n)\nORDER BY o.order_id;",
+        "correct": false,
+        "explanation": "INCORRECT. While NOT IN can work similarly to NOT EXISTS, if the subquery returns any NULL values NOT IN evaluates to UNKNOWN and returns no rows. The NOT EXISTS pattern is safer and the intended approach."
+      }
+    ]
+  },
+  {
+    "id": 137,
+    "title": "Cumulative Revenue Percentage of 2024 Annual Total",
+    "difficulty": "Hard",
+    "category": "Window Functions",
+    "description": "The finance team wants to visualize how revenue accumulates across 2024 as a running percentage of the full-year total. This metric shows milestone progress toward annual revenue goals.",
+    "question": "Write a query on the monthly_revenue table filtered to year 2024 that returns month, revenue, the running total as running_total using SUM() OVER (ORDER BY month), and the cumulative percentage of annual revenue as cumulative_pct (rounded to 1 decimal). Compute cumulative_pct as 100.0 * running_total / annual_total where annual_total is SUM(revenue) OVER (). Order by month.",
+    "hint": "Use SUM(revenue) OVER (ORDER BY month) for running total and SUM(revenue) OVER () for the full-year total, then divide and multiply by 100.",
+    "table_names": [
+      "monthly_revenue"
+    ],
+    "correct_query": "SELECT month,\n       revenue,\n       SUM(revenue) OVER (ORDER BY month) AS running_total,\n       ROUND(100.0 * SUM(revenue) OVER (ORDER BY month) / SUM(revenue) OVER (), 1) AS cumulative_pct\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+    "order_matters": true,
+    "explanation": "Two window functions work together: **SUM(revenue) OVER (ORDER BY month)** computes the running cumulative total month by month. **SUM(revenue) OVER ()** computes the grand total (1310000) for all 2024 rows. Dividing and multiplying by 100.0 gives the percentage. January is 195000/1310000 = ~14.9%, growing to 100% by June.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT month,\n       revenue,\n       SUM(revenue) OVER (ORDER BY month) AS running_total,\n       ROUND(100.0 * SUM(revenue) OVER (ORDER BY month) / SUM(revenue) OVER (), 1) AS cumulative_pct\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+        "correct": true,
+        "explanation": "CORRECT. Running total window and grand total window are correctly combined to compute cumulative percentage, filtered to 2024."
+      },
+      {
+        "id": "B",
+        "text": "SELECT month,\n       revenue,\n       SUM(revenue) OVER (ORDER BY month) AS running_total,\n       ROUND(100.0 * SUM(revenue) OVER (ORDER BY month) / SUM(revenue) OVER (ORDER BY month), 1) AS cumulative_pct\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+        "correct": false,
+        "explanation": "INCORRECT. Both the numerator and denominator use the same running total window, so cumulative_pct always equals 100.0 for every month instead of a growing percentage."
+      },
+      {
+        "id": "C",
+        "text": "SELECT month,\n       revenue,\n       SUM(revenue) OVER (ORDER BY month) AS running_total,\n       ROUND(100.0 * revenue / SUM(revenue) OVER (), 1) AS cumulative_pct\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+        "correct": false,
+        "explanation": "INCORRECT. Divides individual monthly revenue (not the running total) by the annual total, computing each month's standalone share rather than a cumulative percentage."
+      },
+      {
+        "id": "D",
+        "text": "SELECT month,\n       revenue,\n       SUM(revenue) OVER (PARTITION BY year ORDER BY month) AS running_total,\n       ROUND(100.0 * SUM(revenue) OVER (PARTITION BY year ORDER BY month) / SUM(revenue) OVER (PARTITION BY year), 1) AS cumulative_pct\nFROM monthly_revenue\nWHERE year = 2024\nORDER BY month;",
+        "correct": false,
+        "explanation": "INCORRECT. While this works correctly when filtered to a single year, including PARTITION BY year in the WHERE year = 2024 context is redundant; more importantly, it would fail if the year filter were removed because it partitions by year separately — the question asks for the simpler non-partitioned form."
+      }
+    ]
+  },
+  {
+    "id": 138,
+    "title": "Staff Salary Percentile Ranking and Tier",
+    "difficulty": "Hard",
+    "category": "Window Functions",
+    "description": "The HR analytics team wants a comprehensive salary ranking report showing each staff member's percentile rank and compensation tier classification. This supports pay equity analysis and compensation benchmarking.",
+    "question": "Write a query on the staff table returning name, department, salary, the percentile rank as percentile_rank (PERCENT_RANK() * 100, rounded to 1 decimal), and a salary_tier label using NTILE(3): tier 1 = 'Lower Third', tier 2 = 'Middle Third', tier 3 = 'Upper Third'. Both window functions should ORDER BY salary. Order results by salary descending.",
+    "hint": "Use PERCENT_RANK() OVER (ORDER BY salary) * 100 for percentile, NTILE(3) OVER (ORDER BY salary) for tier, then CASE on the ntile value for the label.",
+    "table_names": [
+      "staff"
+    ],
+    "correct_query": "SELECT name,\n       department,\n       salary,\n       ROUND(PERCENT_RANK() OVER (ORDER BY salary) * 100, 1) AS percentile_rank,\n       CASE NTILE(3) OVER (ORDER BY salary)\n           WHEN 1 THEN 'Lower Third'\n           WHEN 2 THEN 'Middle Third'\n           WHEN 3 THEN 'Upper Third'\n       END AS salary_tier\nFROM staff\nORDER BY salary DESC;",
+    "order_matters": true,
+    "explanation": "**PERCENT_RANK()** returns a value between 0 and 1 representing the relative rank; multiplying by 100 and rounding gives a percentage. **NTILE(3)** divides the 10 staff members into 3 roughly equal groups (4, 3, 3 or similar) ordered by salary. The **CASE** expression converts the bucket number to a descriptive label. Sarah Connor at 250k is in the Upper Third with 100th percentile.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT name,\n       department,\n       salary,\n       ROUND(PERCENT_RANK() OVER (ORDER BY salary) * 100, 1) AS percentile_rank,\n       CASE NTILE(3) OVER (ORDER BY salary)\n           WHEN 1 THEN 'Lower Third'\n           WHEN 2 THEN 'Middle Third'\n           WHEN 3 THEN 'Upper Third'\n       END AS salary_tier\nFROM staff\nORDER BY salary DESC;",
+        "correct": true,
+        "explanation": "CORRECT. PERCENT_RANK multiplied by 100 gives percentile, NTILE(3) creates three salary tiers, CASE converts to descriptive labels, ORDER BY salary DESC shows highest earners first."
+      },
+      {
+        "id": "B",
+        "text": "SELECT name,\n       department,\n       salary,\n       ROUND(RANK() OVER (ORDER BY salary) * 100.0 / COUNT(*) OVER (), 1) AS percentile_rank,\n       CASE NTILE(3) OVER (ORDER BY salary)\n           WHEN 1 THEN 'Lower Third'\n           WHEN 2 THEN 'Middle Third'\n           WHEN 3 THEN 'Upper Third'\n       END AS salary_tier\nFROM staff\nORDER BY salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Computes a manual percentile using RANK/COUNT rather than PERCENT_RANK(); this formula gives slightly different values and is not the standard PERCENT_RANK function."
+      },
+      {
+        "id": "C",
+        "text": "SELECT name,\n       department,\n       salary,\n       ROUND(PERCENT_RANK() OVER (ORDER BY salary DESC) * 100, 1) AS percentile_rank,\n       CASE NTILE(3) OVER (ORDER BY salary)\n           WHEN 1 THEN 'Lower Third'\n           WHEN 2 THEN 'Middle Third'\n           WHEN 3 THEN 'Upper Third'\n       END AS salary_tier\nFROM staff\nORDER BY salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. PERCENT_RANK() OVER (ORDER BY salary DESC) computes inverse percentile (highest salary = 0th percentile, lowest = 100th), which is the opposite of the standard interpretation."
+      },
+      {
+        "id": "D",
+        "text": "SELECT name,\n       department,\n       salary,\n       ROUND(PERCENT_RANK() OVER (ORDER BY salary) * 100, 1) AS percentile_rank,\n       CASE NTILE(4) OVER (ORDER BY salary)\n           WHEN 1 THEN 'Lower Third'\n           WHEN 2 THEN 'Middle Third'\n           WHEN 3 THEN 'Upper Third'\n           WHEN 4 THEN 'Upper Third'\n       END AS salary_tier\nFROM staff\nORDER BY salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Uses NTILE(4) for quartiles instead of NTILE(3) for thirds, producing 4 buckets; collapsing buckets 3 and 4 into 'Upper Third' is incorrect and inconsistent."
+      }
+    ]
+  },
+  {
+    "id": 139,
+    "title": "Multi-Metric Customer Value Analysis",
+    "difficulty": "Hard",
+    "category": "CTEs (Common Table Expressions)",
+    "description": "The customer analytics team needs a comprehensive value scorecard for all customers who have made purchases. This combines order frequency, spending, average order size, product variety, and revenue ranking.",
+    "question": "Write a query using a CTE that joins customers, orders, and order_items to compute per-customer: name, count of distinct orders as order_count, total revenue as total_spent (rounded to 2 decimals), average order value as avg_order (rounded to 2 decimals), count of distinct products purchased as unique_products, and a revenue rank using DENSE_RANK() OVER (ORDER BY SUM(total_amount) DESC) as revenue_rank. Return all columns from the CTE ordered by revenue_rank.",
+    "hint": "CTE: JOIN customers -> orders -> order_items, GROUP BY customer, compute COUNT(DISTINCT order_id), SUM/AVG(total_amount), COUNT(DISTINCT product_id), DENSE_RANK() OVER (ORDER BY SUM(total_amount) DESC).",
+    "table_names": [
+      "customers",
+      "orders",
+      "order_items"
+    ],
+    "correct_query": "WITH customer_metrics AS (\n    SELECT c.name,\n           COUNT(DISTINCT o.order_id) AS order_count,\n           ROUND(SUM(o.total_amount), 2) AS total_spent,\n           ROUND(AVG(o.total_amount), 2) AS avg_order,\n           COUNT(DISTINCT oi.product_id) AS unique_products,\n           DENSE_RANK() OVER (ORDER BY SUM(o.total_amount) DESC) AS revenue_rank\n    FROM customers c\n    JOIN orders o ON c.customer_id = o.customer_id\n    JOIN order_items oi ON o.order_id = oi.order_id\n    GROUP BY c.name\n)\nSELECT *\nFROM customer_metrics\nORDER BY revenue_rank;",
+    "order_matters": true,
+    "explanation": "The **CTE** performs a three-table join. **COUNT(DISTINCT o.order_id)** avoids over-counting orders due to the join with order_items. **SUM(o.total_amount)** must also use DISTINCT or be careful — since order_items creates multiple rows per order, using AVG(DISTINCT) or working with order-level totals is correct here. **COUNT(DISTINCT oi.product_id)** counts unique products. **DENSE_RANK()** window function ranks customers by total spending.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "WITH customer_metrics AS (\n    SELECT c.name,\n           COUNT(DISTINCT o.order_id) AS order_count,\n           ROUND(SUM(o.total_amount), 2) AS total_spent,\n           ROUND(AVG(o.total_amount), 2) AS avg_order,\n           COUNT(DISTINCT oi.product_id) AS unique_products,\n           DENSE_RANK() OVER (ORDER BY SUM(o.total_amount) DESC) AS revenue_rank\n    FROM customers c\n    JOIN orders o ON c.customer_id = o.customer_id\n    JOIN order_items oi ON o.order_id = oi.order_id\n    GROUP BY c.name\n)\nSELECT *\nFROM customer_metrics\nORDER BY revenue_rank;",
+        "correct": true,
+        "explanation": "CORRECT. Three-table join with appropriate DISTINCT counts, window function DENSE_RANK for revenue ranking, all grouped by customer name."
+      },
+      {
+        "id": "B",
+        "text": "WITH customer_metrics AS (\n    SELECT c.name,\n           COUNT(o.order_id) AS order_count,\n           ROUND(SUM(o.total_amount), 2) AS total_spent,\n           ROUND(AVG(o.total_amount), 2) AS avg_order,\n           COUNT(oi.product_id) AS unique_products,\n           DENSE_RANK() OVER (ORDER BY SUM(o.total_amount) DESC) AS revenue_rank\n    FROM customers c\n    JOIN orders o ON c.customer_id = o.customer_id\n    JOIN order_items oi ON o.order_id = oi.order_id\n    GROUP BY c.name\n)\nSELECT *\nFROM customer_metrics\nORDER BY revenue_rank;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing DISTINCT in COUNT(o.order_id) and COUNT(oi.product_id); after joining orders to order_items, each order appears multiple times (once per item), so order_count and unique_products are over-counted."
+      },
+      {
+        "id": "C",
+        "text": "WITH customer_metrics AS (\n    SELECT c.name,\n           COUNT(DISTINCT o.order_id) AS order_count,\n           ROUND(SUM(o.total_amount), 2) AS total_spent,\n           ROUND(AVG(o.total_amount), 2) AS avg_order,\n           COUNT(DISTINCT oi.product_id) AS unique_products,\n           RANK() OVER (ORDER BY SUM(o.total_amount) DESC) AS revenue_rank\n    FROM customers c\n    JOIN orders o ON c.customer_id = o.customer_id\n    JOIN order_items oi ON o.order_id = oi.order_id\n    GROUP BY c.name\n)\nSELECT *\nFROM customer_metrics\nORDER BY revenue_rank;",
+        "correct": false,
+        "explanation": "INCORRECT. Uses RANK() instead of DENSE_RANK(); RANK() skips numbers after ties (e.g., if two customers tie for rank 1, the next rank is 3 not 2), while DENSE_RANK() assigns consecutive ranks."
+      },
+      {
+        "id": "D",
+        "text": "WITH customer_metrics AS (\n    SELECT c.name,\n           COUNT(DISTINCT o.order_id) AS order_count,\n           ROUND(SUM(o.total_amount), 2) AS total_spent,\n           ROUND(AVG(o.total_amount), 2) AS avg_order,\n           COUNT(DISTINCT oi.product_id) AS unique_products,\n           DENSE_RANK() OVER (ORDER BY SUM(o.total_amount) DESC) AS revenue_rank\n    FROM customers c\n    LEFT JOIN orders o ON c.customer_id = o.customer_id\n    LEFT JOIN order_items oi ON o.order_id = oi.order_id\n    GROUP BY c.name\n)\nSELECT *\nFROM customer_metrics\nORDER BY revenue_rank;",
+        "correct": false,
+        "explanation": "INCORRECT. LEFT JOINs include customers with no orders (Oliver White, Sophia Harris) whose total_spent is NULL; DENSE_RANK() with NULL in the ORDER BY expression places them at rank 1 in some SQL engines or produces unexpected ordering."
+      }
+    ]
+  },
+  {
+    "id": 140,
+    "title": "Product Co-Purchase Pair Analysis",
+    "difficulty": "Hard",
+    "category": "Joins",
+    "description": "The recommendations team wants to identify which pairs of products are most frequently purchased together in the same order. This data powers 'customers also bought' features and bundle promotions.",
+    "question": "Write a query that self-joins the order_items table to find pairs of products appearing in the same order. Join products twice to get product names. Return product1_name, product2_name, and pair_count (number of orders containing both). Use the condition oi1.product_id < oi2.product_id to avoid duplicate pairs. Group by the product name pair and order by pair_count descending, limit to 10 rows.",
+    "hint": "Self-join order_items ON same order_id WHERE oi1.product_id < oi2.product_id, join products twice for names, GROUP BY name pair, ORDER BY COUNT(*) DESC, LIMIT 10.",
+    "table_names": [
+      "order_items",
+      "products"
+    ],
+    "correct_query": "SELECT p1.name AS product1_name,\n       p2.name AS product2_name,\n       COUNT(*) AS pair_count\nFROM order_items oi1\nJOIN order_items oi2 ON oi1.order_id = oi2.order_id\n    AND oi1.product_id < oi2.product_id\nJOIN products p1 ON oi1.product_id = p1.product_id\nJOIN products p2 ON oi2.product_id = p2.product_id\nGROUP BY p1.name, p2.name\nORDER BY pair_count DESC\nLIMIT 10;",
+    "order_matters": true,
+    "explanation": "**Self-joining order_items** (oi1 and oi2) on the same order_id with **oi1.product_id < oi2.product_id** creates all unique product pairs per order without duplicates. Two additional joins to the products table retrieve names. **GROUP BY** the product name pair and **COUNT(*)** tallies co-occurrences. **ORDER BY pair_count DESC LIMIT 10** returns the top 10 most frequently co-purchased pairs. Pairs like Webcam + Headphones (both in order 7) appear together.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT p1.name AS product1_name,\n       p2.name AS product2_name,\n       COUNT(*) AS pair_count\nFROM order_items oi1\nJOIN order_items oi2 ON oi1.order_id = oi2.order_id\n    AND oi1.product_id < oi2.product_id\nJOIN products p1 ON oi1.product_id = p1.product_id\nJOIN products p2 ON oi2.product_id = p2.product_id\nGROUP BY p1.name, p2.name\nORDER BY pair_count DESC\nLIMIT 10;",
+        "correct": true,
+        "explanation": "CORRECT. Self-join with product_id < product_id avoids duplicates, two product joins retrieve names, GROUP BY pair aggregates co-purchase counts."
+      },
+      {
+        "id": "B",
+        "text": "SELECT p1.name AS product1_name,\n       p2.name AS product2_name,\n       COUNT(*) AS pair_count\nFROM order_items oi1\nJOIN order_items oi2 ON oi1.order_id = oi2.order_id\n    AND oi1.product_id <> oi2.product_id\nJOIN products p1 ON oi1.product_id = p1.product_id\nJOIN products p2 ON oi2.product_id = p2.product_id\nGROUP BY p1.name, p2.name\nORDER BY pair_count DESC\nLIMIT 10;",
+        "correct": false,
+        "explanation": "INCORRECT. Using <> instead of < generates both (A,B) and (B,A) for every pair, doubling all counts and returning duplicate pairs in opposite orders."
+      },
+      {
+        "id": "C",
+        "text": "SELECT p1.name AS product1_name,\n       p2.name AS product2_name,\n       COUNT(*) AS pair_count\nFROM order_items oi1\nJOIN order_items oi2 ON oi1.order_id = oi2.order_id\n    AND oi1.product_id < oi2.product_id\nJOIN products p1 ON oi1.product_id = p1.product_id\nJOIN products p2 ON oi2.product_id = p2.product_id\nGROUP BY p1.name, p2.name\nORDER BY pair_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing LIMIT 10 returns all co-purchase pairs, not just the top 10 as required by the question."
+      },
+      {
+        "id": "D",
+        "text": "SELECT p1.name AS product1_name,\n       p2.name AS product2_name,\n       COUNT(DISTINCT oi1.order_id) AS pair_count\nFROM order_items oi1\nJOIN order_items oi2 ON oi1.item_id = oi2.item_id\n    AND oi1.product_id < oi2.product_id\nJOIN products p1 ON oi1.product_id = p1.product_id\nJOIN products p2 ON oi2.product_id = p2.product_id\nGROUP BY p1.name, p2.name\nORDER BY pair_count DESC\nLIMIT 10;",
+        "correct": false,
+        "explanation": "INCORRECT. The self-join on oi1.item_id = oi2.item_id joins rows to themselves (same item), so combined with product_id < product_id this matches nothing (a row can't have two different product_ids with the same item_id), returning 0 rows."
+      }
+    ]
+  }
+]

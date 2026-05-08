@@ -1,0 +1,587 @@
+[
+  {
+    "id": 101,
+    "title": "Filter Electronics Products by Price",
+    "difficulty": "Easy",
+    "category": "Filtering & Sorting",
+    "description": "The product team wants to review all electronics in the catalog sorted from most to least expensive. This helps identify premium items and pricing tiers within the category.",
+    "question": "Write a query that returns all columns from the products table for products in the 'Electronics' category, ordered by price descending.",
+    "hint": "Use WHERE to filter by category and ORDER BY with DESC for descending price.",
+    "table_names": ["products"],
+    "correct_query": "SELECT *\nFROM products\nWHERE category = 'Electronics'\nORDER BY price DESC;",
+    "order_matters": true,
+    "explanation": "**WHERE** filters rows to only those where category equals 'Electronics'. **ORDER BY price DESC** sorts the results from highest to lowest price. There are 7 electronics products returned.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT *\nFROM products\nWHERE category = 'Electronics'\nORDER BY price DESC;",
+        "correct": true,
+        "explanation": "CORRECT. WHERE filters to Electronics category and ORDER BY price DESC sorts highest price first."
+      },
+      {
+        "id": "B",
+        "text": "SELECT *\nFROM products\nWHERE category = 'Electronics'\nORDER BY price ASC;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY price ASC sorts from lowest to highest price, but the question requires descending order."
+      },
+      {
+        "id": "C",
+        "text": "SELECT *\nFROM products\nORDER BY price DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing the WHERE clause, so this returns all 12 products from every category, not just Electronics."
+      },
+      {
+        "id": "D",
+        "text": "SELECT *\nFROM products\nWHERE category = 'Electronics'\nORDER BY name DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY name DESC sorts alphabetically by product name in reverse order, not by price."
+      }
+    ]
+  },
+  {
+    "id": 102,
+    "title": "Recently Hired Employees",
+    "difficulty": "Easy",
+    "category": "Filtering & Sorting",
+    "description": "HR needs a list of employees hired in 2021 or later to review onboarding experiences and gather feedback. Five employees meet this criterion.",
+    "question": "Write a query returning all columns from the employees table for employees hired on or after January 1, 2021, ordered by hire_date ascending.",
+    "hint": "Use WHERE with a date comparison using >= and ORDER BY hire_date.",
+    "table_names": ["employees"],
+    "correct_query": "SELECT *\nFROM employees\nWHERE hire_date >= '2021-01-01'\nORDER BY hire_date;",
+    "order_matters": false,
+    "explanation": "**WHERE hire_date >= '2021-01-01'** filters to employees hired on or after that date. The 5 qualifying employees are Carol (2021-07-01), Henry (2021-04-05), Grace (2022-01-10), Isabel (2022-06-20), and James (2023-02-01). **ORDER BY hire_date** sorts them chronologically.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT *\nFROM employees\nWHERE hire_date >= '2021-01-01'\nORDER BY hire_date;",
+        "correct": true,
+        "explanation": "CORRECT. >= '2021-01-01' correctly includes all employees hired from January 1, 2021 onward, returning 5 rows."
+      },
+      {
+        "id": "B",
+        "text": "SELECT *\nFROM employees\nWHERE hire_date > '2021-01-01'\nORDER BY hire_date;",
+        "correct": false,
+        "explanation": "INCORRECT. The > operator excludes January 1, 2021 itself. No employee was hired exactly on that date here, but the correct operator is >= as specified."
+      },
+      {
+        "id": "C",
+        "text": "SELECT *\nFROM employees\nWHERE hire_date >= '2020-01-01'\nORDER BY hire_date;",
+        "correct": false,
+        "explanation": "INCORRECT. Using 2020-01-01 includes Alice (2020-01-15) and Emma (2020-05-20) as well, returning 7 rows instead of 5."
+      },
+      {
+        "id": "D",
+        "text": "SELECT *\nFROM employees\nWHERE EXTRACT(YEAR FROM hire_date) >= 2021\nORDER BY hire_date;",
+        "correct": false,
+        "explanation": "INCORRECT. While this returns the same 5 rows in this dataset, it is less direct than a date comparison and would fail to include someone hired on 2020-12-31 if that were a requirement interpretation."
+      }
+    ]
+  },
+  {
+    "id": 103,
+    "title": "Monthly Order Summary for 2024",
+    "difficulty": "Easy",
+    "category": "Aggregation & Grouping",
+    "description": "The sales team wants a month-by-month breakdown of order activity in 2024. This reveals seasonal patterns and helps forecast future demand.",
+    "question": "Write a query that groups orders by month for the year 2024. Return the month number as order_month, the count of orders as order_count, and the rounded total revenue as monthly_revenue (2 decimal places). Filter to orders where the year is 2024, and order by order_month ascending.",
+    "hint": "Use EXTRACT(MONTH FROM order_date) for grouping, SUM with ROUND for revenue, and WHERE with EXTRACT(YEAR).",
+    "table_names": ["orders"],
+    "correct_query": "SELECT EXTRACT(MONTH FROM order_date) AS order_month,\n       COUNT(*) AS order_count,\n       ROUND(SUM(total_amount), 2) AS monthly_revenue\nFROM orders\nWHERE EXTRACT(YEAR FROM order_date) = 2024\nGROUP BY EXTRACT(MONTH FROM order_date)\nORDER BY order_month;",
+    "order_matters": true,
+    "explanation": "**EXTRACT(MONTH FROM order_date)** pulls the month number from the date. **WHERE EXTRACT(YEAR FROM order_date) = 2024** limits results to 2024. **GROUP BY** aggregates rows by month, and **COUNT(*)** and **SUM(total_amount)** compute per-month stats. **ROUND(..., 2)** formats the revenue. 6 months of data are returned.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT EXTRACT(MONTH FROM order_date) AS order_month,\n       COUNT(*) AS order_count,\n       ROUND(SUM(total_amount), 2) AS monthly_revenue\nFROM orders\nWHERE EXTRACT(YEAR FROM order_date) = 2024\nGROUP BY EXTRACT(MONTH FROM order_date)\nORDER BY order_month;",
+        "correct": true,
+        "explanation": "CORRECT. Extracts month, filters to 2024, groups and aggregates correctly, returning 6 rows for Jan-Jun 2024."
+      },
+      {
+        "id": "B",
+        "text": "SELECT EXTRACT(MONTH FROM order_date) AS order_month,\n       COUNT(*) AS order_count,\n       ROUND(SUM(total_amount), 2) AS monthly_revenue\nFROM orders\nGROUP BY EXTRACT(MONTH FROM order_date)\nORDER BY order_month;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing the WHERE clause to filter by year 2024, so all orders from all years are grouped together, producing incorrect counts and totals."
+      },
+      {
+        "id": "C",
+        "text": "SELECT EXTRACT(MONTH FROM order_date) AS order_month,\n       COUNT(*) AS order_count,\n       ROUND(AVG(total_amount), 2) AS monthly_revenue\nFROM orders\nWHERE EXTRACT(YEAR FROM order_date) = 2024\nGROUP BY EXTRACT(MONTH FROM order_date)\nORDER BY order_month;",
+        "correct": false,
+        "explanation": "INCORRECT. Uses AVG instead of SUM for monthly_revenue, returning the average order amount per month rather than total revenue."
+      },
+      {
+        "id": "D",
+        "text": "SELECT EXTRACT(MONTH FROM order_date) AS order_month,\n       COUNT(*) AS order_count,\n       ROUND(SUM(total_amount), 2) AS monthly_revenue\nFROM orders\nWHERE EXTRACT(YEAR FROM order_date) = 2024\nGROUP BY order_month\nORDER BY order_month;",
+        "correct": false,
+        "explanation": "INCORRECT. GROUP BY order_month references the alias, which is not valid in standard SQL (including DuckDB's strict mode); GROUP BY must reference the expression or column directly."
+      }
+    ]
+  },
+  {
+    "id": 104,
+    "title": "Product Statistics by Category",
+    "difficulty": "Easy",
+    "category": "Aggregation & Grouping",
+    "description": "The merchandising team wants to understand pricing across product categories to guide purchasing decisions. Knowing the average price and product count per category is essential.",
+    "question": "Write a query returning category, the count of products as product_count, and the average price rounded to 2 decimal places as avg_price from the products table. Group by category and order by avg_price descending.",
+    "hint": "Use GROUP BY category with COUNT(*) and ROUND(AVG(price), 2), then ORDER BY avg_price DESC.",
+    "table_names": ["products"],
+    "correct_query": "SELECT category,\n       COUNT(*) AS product_count,\n       ROUND(AVG(price), 2) AS avg_price\nFROM products\nGROUP BY category\nORDER BY avg_price DESC;",
+    "order_matters": true,
+    "explanation": "**GROUP BY category** aggregates all rows by their category value. **COUNT(*)** counts products per group. **AVG(price)** computes the mean price, and **ROUND(..., 2)** formats it. **ORDER BY avg_price DESC** sorts from highest average price down. Furniture has the highest avg (~332), then Electronics (~277), then Stationery (~14).",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT category,\n       COUNT(*) AS product_count,\n       ROUND(AVG(price), 2) AS avg_price\nFROM products\nGROUP BY category\nORDER BY avg_price DESC;",
+        "correct": true,
+        "explanation": "CORRECT. Properly groups by category, counts products, averages price with rounding, and sorts by avg_price descending."
+      },
+      {
+        "id": "B",
+        "text": "SELECT category,\n       COUNT(*) AS product_count,\n       ROUND(AVG(price), 2) AS avg_price\nFROM products\nGROUP BY category\nORDER BY product_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Orders by product_count instead of avg_price, producing a different sort order than requested."
+      },
+      {
+        "id": "C",
+        "text": "SELECT category,\n       COUNT(*) AS product_count,\n       ROUND(SUM(price), 2) AS avg_price\nFROM products\nGROUP BY category\nORDER BY avg_price DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Uses SUM(price) instead of AVG(price), so avg_price actually contains the total price per category, not the average."
+      },
+      {
+        "id": "D",
+        "text": "SELECT category,\n       COUNT(*) AS product_count,\n       ROUND(AVG(price), 2) AS avg_price\nFROM products\nORDER BY avg_price DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing the GROUP BY clause, so the query attempts to mix non-aggregated and aggregated columns, which will produce an error or incorrect results."
+      }
+    ]
+  },
+  {
+    "id": 105,
+    "title": "Customers from Selected Cities",
+    "difficulty": "Easy",
+    "category": "Filtering & Sorting",
+    "description": "Marketing is launching a targeted campaign for customers in three major cities. They need a list of customers in New York, Chicago, and Los Angeles for outreach.",
+    "question": "Write a query returning all columns from the customers table for customers located in New York, Chicago, or Los Angeles. Order the results by city ascending.",
+    "hint": "Use WHERE city IN (...) to filter for multiple city values.",
+    "table_names": ["customers"],
+    "correct_query": "SELECT *\nFROM customers\nWHERE city IN ('New York', 'Chicago', 'Los Angeles')\nORDER BY city;",
+    "order_matters": false,
+    "explanation": "**WHERE city IN ('New York', 'Chicago', 'Los Angeles')** is equivalent to three OR conditions but more concise. It returns Alice Chen (New York), Bob Martinez (Chicago), and Carol Lee (Los Angeles). **ORDER BY city** sorts alphabetically by city.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT *\nFROM customers\nWHERE city IN ('New York', 'Chicago', 'Los Angeles')\nORDER BY city;",
+        "correct": true,
+        "explanation": "CORRECT. IN operator correctly matches all three cities and ORDER BY city sorts alphabetically."
+      },
+      {
+        "id": "B",
+        "text": "SELECT *\nFROM customers\nWHERE city = 'New York' AND city = 'Chicago' AND city = 'Los Angeles'\nORDER BY city;",
+        "correct": false,
+        "explanation": "INCORRECT. A single city column cannot equal three different values simultaneously; AND requires all conditions true at once, so this returns 0 rows."
+      },
+      {
+        "id": "C",
+        "text": "SELECT *\nFROM customers\nWHERE city IN ('New York', 'Chicago', 'Los Angeles')\nORDER BY name;",
+        "correct": false,
+        "explanation": "INCORRECT. Filters correctly but orders by name instead of city, producing a different sort order."
+      },
+      {
+        "id": "D",
+        "text": "SELECT *\nFROM customers\nWHERE city NOT IN ('New York', 'Chicago', 'Los Angeles')\nORDER BY city;",
+        "correct": false,
+        "explanation": "INCORRECT. NOT IN excludes those three cities and returns all other customers, which is the opposite of what is needed."
+      }
+    ]
+  },
+  {
+    "id": 106,
+    "title": "Department with Highest Budget",
+    "difficulty": "Easy",
+    "category": "Filtering & Sorting",
+    "description": "Finance needs to quickly identify which department has the largest allocated budget for resource planning purposes.",
+    "question": "Write a query returning all columns from the departments table for the single department with the highest budget. Use ORDER BY budget DESC with LIMIT 1.",
+    "hint": "Use ORDER BY budget DESC and LIMIT 1 to get the top result.",
+    "table_names": ["departments"],
+    "correct_query": "SELECT *\nFROM departments\nORDER BY budget DESC\nLIMIT 1;",
+    "order_matters": true,
+    "explanation": "**ORDER BY budget DESC** sorts departments from highest to lowest budget. **LIMIT 1** returns only the top row, which is Engineering with a budget of 600,000. This is simpler than using a subquery with MAX().",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT *\nFROM departments\nORDER BY budget DESC\nLIMIT 1;",
+        "correct": true,
+        "explanation": "CORRECT. Sorts by budget descending and takes the first row, returning the Engineering department with budget 600000."
+      },
+      {
+        "id": "B",
+        "text": "SELECT *\nFROM departments\nORDER BY budget ASC\nLIMIT 1;",
+        "correct": false,
+        "explanation": "INCORRECT. ASC sorts lowest first, so LIMIT 1 returns the department with the smallest budget (HR at 200000), not the highest."
+      },
+      {
+        "id": "C",
+        "text": "SELECT *\nFROM departments\nWHERE budget = AVG(budget);",
+        "correct": false,
+        "explanation": "INCORRECT. You cannot use an aggregate function like AVG() directly in a WHERE clause without a subquery; this would produce an error."
+      },
+      {
+        "id": "D",
+        "text": "SELECT *\nFROM departments\nORDER BY budget DESC\nLIMIT 2;",
+        "correct": false,
+        "explanation": "INCORRECT. LIMIT 2 returns the top two departments (Engineering and Sales), not just the single highest-budget department."
+      }
+    ]
+  },
+  {
+    "id": 107,
+    "title": "Q1 2024 Order Summary",
+    "difficulty": "Easy",
+    "category": "Aggregation & Grouping",
+    "description": "The quarterly business review requires a summary of order activity during the first quarter of 2024 (January through March). This single-row summary shows total order count and revenue.",
+    "question": "Write a query that returns the count of orders as order_count and the total revenue rounded to 2 decimal places as q1_revenue for orders placed between January 1, 2024 and March 31, 2024 inclusive.",
+    "hint": "Use WHERE order_date BETWEEN '2024-01-01' AND '2024-03-31' with COUNT(*) and ROUND(SUM(...),2).",
+    "table_names": ["orders"],
+    "correct_query": "SELECT COUNT(*) AS order_count,\n       ROUND(SUM(total_amount), 2) AS q1_revenue\nFROM orders\nWHERE order_date BETWEEN '2024-01-01' AND '2024-03-31';",
+    "order_matters": false,
+    "explanation": "**BETWEEN '2024-01-01' AND '2024-03-31'** is inclusive on both ends, covering January, February, and March 2024. There are 10 orders in Q1 (orders 1-10). **COUNT(*)** returns 10 and **ROUND(SUM(total_amount), 2)** sums all order totals for Q1.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT COUNT(*) AS order_count,\n       ROUND(SUM(total_amount), 2) AS q1_revenue\nFROM orders\nWHERE order_date BETWEEN '2024-01-01' AND '2024-03-31';",
+        "correct": true,
+        "explanation": "CORRECT. BETWEEN is inclusive, correctly capturing all 10 Q1 2024 orders and summing their total amounts."
+      },
+      {
+        "id": "B",
+        "text": "SELECT COUNT(*) AS order_count,\n       ROUND(SUM(total_amount), 2) AS q1_revenue\nFROM orders\nWHERE order_date >= '2024-01-01' AND order_date < '2024-03-31';",
+        "correct": false,
+        "explanation": "INCORRECT. The < operator on the end date excludes March 31, 2024. Orders placed on that date would be missed (though none happen to fall on exactly that date in this dataset, the logic is wrong)."
+      },
+      {
+        "id": "C",
+        "text": "SELECT COUNT(*) AS order_count,\n       ROUND(SUM(total_amount), 2) AS q1_revenue\nFROM orders\nWHERE EXTRACT(QUARTER FROM order_date) = 1;",
+        "correct": false,
+        "explanation": "INCORRECT. EXTRACT(QUARTER) does not filter by year, so this includes Q1 orders from all years, not just 2024."
+      },
+      {
+        "id": "D",
+        "text": "SELECT COUNT(*) AS order_count,\n       ROUND(AVG(total_amount), 2) AS q1_revenue\nFROM orders\nWHERE order_date BETWEEN '2024-01-01' AND '2024-03-31';",
+        "correct": false,
+        "explanation": "INCORRECT. Uses AVG instead of SUM, so q1_revenue shows the average order value rather than total revenue."
+      }
+    ]
+  },
+  {
+    "id": 108,
+    "title": "Sales Department Employees by Salary",
+    "difficulty": "Easy",
+    "category": "Joins",
+    "description": "The HR team needs a roster of all employees in the Sales department ranked by compensation. This requires combining employee data with department information.",
+    "question": "Write a query joining employees to departments to return employee_id, employee name, salary, and department_name for employees in the Sales department, ordered by salary descending.",
+    "hint": "JOIN employees to departments on department_id, then WHERE department_name = 'Sales' and ORDER BY salary DESC.",
+    "table_names": ["employees", "departments"],
+    "correct_query": "SELECT e.employee_id,\n       e.name,\n       e.salary,\n       d.department_name\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nWHERE d.department_name = 'Sales'\nORDER BY e.salary DESC;",
+    "order_matters": true,
+    "explanation": "**JOIN** combines employees and departments on the shared department_id key. **WHERE d.department_name = 'Sales'** filters to Sales employees only. The Sales department (dept 2) has David Brown (110k), Frank Miller (110k), and Emma Davis (98k). **ORDER BY salary DESC** sorts highest to lowest.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT e.employee_id,\n       e.name,\n       e.salary,\n       d.department_name\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nWHERE d.department_name = 'Sales'\nORDER BY e.salary DESC;",
+        "correct": true,
+        "explanation": "CORRECT. Properly joins on department_id, filters to Sales, and sorts by salary descending returning 3 employees."
+      },
+      {
+        "id": "B",
+        "text": "SELECT e.employee_id,\n       e.name,\n       e.salary,\n       d.department_name\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nWHERE d.department_name = 'Sales'\nORDER BY e.salary ASC;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY salary ASC sorts from lowest to highest salary, reversing the required descending order."
+      },
+      {
+        "id": "C",
+        "text": "SELECT e.employee_id,\n       e.name,\n       e.salary,\n       d.department_name\nFROM employees e\nJOIN departments d ON e.department_id = d.department_id\nWHERE e.department_id = 2\nORDER BY e.salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Filtering on the hard-coded department_id = 2 is brittle and not the same as filtering by name; the question specifically requires filtering by department_name."
+      },
+      {
+        "id": "D",
+        "text": "SELECT e.employee_id,\n       e.name,\n       e.salary,\n       d.department_name\nFROM employees e, departments d\nWHERE d.department_name = 'Sales'\nORDER BY e.salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. The implicit cross-join (FROM employees e, departments d) without a JOIN condition creates a Cartesian product, returning every employee paired with the Sales department row."
+      }
+    ]
+  },
+  {
+    "id": 109,
+    "title": "Budget-Friendly Products Under $50",
+    "difficulty": "Easy",
+    "category": "Filtering & Sorting",
+    "description": "A promotional campaign focuses on affordable products priced under $50. The team needs a list of these items sorted by price to highlight the best deals first.",
+    "question": "Write a query returning all columns from the products table for products with a price less than 50, ordered by price descending.",
+    "hint": "Use WHERE price < 50 and ORDER BY price DESC.",
+    "table_names": ["products"],
+    "correct_query": "SELECT *\nFROM products\nWHERE price < 50\nORDER BY price DESC;",
+    "order_matters": true,
+    "explanation": "**WHERE price < 50** filters to products cheaper than $50. The qualifying products are USB-C Hub (49.99), Desk Lamp (45.99), Notebook Set (19.99), Wireless Mouse (29.99), and Pen Pack (8.99) — 5 products total. **ORDER BY price DESC** shows the most expensive of these first.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT *\nFROM products\nWHERE price < 50\nORDER BY price DESC;",
+        "correct": true,
+        "explanation": "CORRECT. Filters to price < 50 (5 products) and sorts descending so the highest-priced budget items appear first."
+      },
+      {
+        "id": "B",
+        "text": "SELECT *\nFROM products\nWHERE price <= 50\nORDER BY price DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. <= 50 would include a product priced exactly at $50 if one existed. The question specifies strictly less than 50."
+      },
+      {
+        "id": "C",
+        "text": "SELECT *\nFROM products\nWHERE price < 50\nORDER BY price ASC;",
+        "correct": false,
+        "explanation": "INCORRECT. ASC sorts from cheapest to most expensive, but the question requires descending order (most expensive budget item first)."
+      },
+      {
+        "id": "D",
+        "text": "SELECT *\nFROM products\nWHERE price < 50\nORDER BY name DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY name sorts alphabetically by product name in reverse, not by price as required."
+      }
+    ]
+  },
+  {
+    "id": 110,
+    "title": "Employee Count per Department Including Empty Departments",
+    "difficulty": "Easy",
+    "category": "Joins",
+    "description": "HR wants to see all departments along with how many employees are assigned to each, including departments with no employees. The HR department currently has no staff assigned.",
+    "question": "Write a query using a LEFT JOIN from departments to employees that returns department_name, and the count of employees as employee_count. Group by department_name and order by employee_count descending.",
+    "hint": "Use LEFT JOIN from departments to employees so HR (with 0 employees) appears, then COUNT(e.employee_id) to count only matched employees.",
+    "table_names": ["departments", "employees"],
+    "correct_query": "SELECT d.department_name,\n       COUNT(e.employee_id) AS employee_count\nFROM departments d\nLEFT JOIN employees e ON d.department_id = e.department_id\nGROUP BY d.department_name\nORDER BY employee_count DESC;",
+    "order_matters": true,
+    "explanation": "**LEFT JOIN** from departments to employees ensures all departments appear even if no employees match, giving HR a count of 0. **COUNT(e.employee_id)** counts only non-NULL employee_id values, so unmatched departments get 0 rather than 1. Engineering has 4, Sales has 3, Marketing has 3, HR has 0.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT d.department_name,\n       COUNT(e.employee_id) AS employee_count\nFROM departments d\nLEFT JOIN employees e ON d.department_id = e.department_id\nGROUP BY d.department_name\nORDER BY employee_count DESC;",
+        "correct": true,
+        "explanation": "CORRECT. LEFT JOIN preserves HR, COUNT(e.employee_id) gives 0 for unmatched departments, and ORDER BY employee_count DESC sorts correctly."
+      },
+      {
+        "id": "B",
+        "text": "SELECT d.department_name,\n       COUNT(*) AS employee_count\nFROM departments d\nLEFT JOIN employees e ON d.department_id = e.department_id\nGROUP BY d.department_name\nORDER BY employee_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. COUNT(*) counts all rows including the NULL employee row for HR, giving HR a count of 1 instead of 0."
+      },
+      {
+        "id": "C",
+        "text": "SELECT d.department_name,\n       COUNT(e.employee_id) AS employee_count\nFROM departments d\nJOIN employees e ON d.department_id = e.department_id\nGROUP BY d.department_name\nORDER BY employee_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. INNER JOIN (JOIN) excludes departments with no employees, so HR (0 employees) would not appear in the results."
+      },
+      {
+        "id": "D",
+        "text": "SELECT d.department_name,\n       COUNT(e.employee_id) AS employee_count\nFROM employees e\nLEFT JOIN departments d ON d.department_id = e.department_id\nGROUP BY d.department_name\nORDER BY employee_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. The LEFT JOIN is from employees to departments, meaning only departments that have employees appear; HR with 0 employees is excluded."
+      }
+    ]
+  },
+  {
+    "id": 111,
+    "title": "Total Units Sold per Product",
+    "difficulty": "Easy",
+    "category": "Aggregation & Grouping",
+    "description": "Inventory management needs to know which products have the highest sales volume by units. This helps with restocking priorities and identifies best-sellers.",
+    "question": "Write a query joining products to order_items that returns product name and the total quantity sold as total_units. Group by product name and order by total_units descending.",
+    "hint": "JOIN products to order_items on product_id, use SUM(quantity) AS total_units, GROUP BY product name, ORDER BY total_units DESC.",
+    "table_names": ["products", "order_items"],
+    "correct_query": "SELECT p.name,\n       SUM(oi.quantity) AS total_units\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nORDER BY total_units DESC;",
+    "order_matters": true,
+    "explanation": "**JOIN** links products to their order line items on product_id. **SUM(oi.quantity)** totals all units sold per product. **GROUP BY p.name** aggregates by product. Products with multiple order appearances (like Laptop Pro appearing in 4 orders) have higher totals. Products never ordered (none in this dataset) would be excluded by the INNER JOIN.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT p.name,\n       SUM(oi.quantity) AS total_units\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nORDER BY total_units DESC;",
+        "correct": true,
+        "explanation": "CORRECT. Joins on product_id, sums quantities per product name, and sorts by total units descending."
+      },
+      {
+        "id": "B",
+        "text": "SELECT p.name,\n       COUNT(*) AS total_units\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nORDER BY total_units DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. COUNT(*) counts the number of order line items (appearances) per product, not the total quantity sold. A product ordered 2 at once would show 1 instead of 2."
+      },
+      {
+        "id": "C",
+        "text": "SELECT p.name,\n       SUM(oi.quantity) AS total_units\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.name\nORDER BY total_units ASC;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY total_units ASC sorts from fewest units sold to most, but the question requires descending order."
+      },
+      {
+        "id": "D",
+        "text": "SELECT p.name,\n       SUM(oi.quantity) AS total_units\nFROM order_items oi\nJOIN products p ON p.product_id = oi.product_id\nGROUP BY oi.product_id\nORDER BY total_units DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. GROUP BY oi.product_id groups by the numeric ID but selects p.name; in strict SQL this can cause issues and the grouping should match the selected non-aggregate column p.name."
+      }
+    ]
+  },
+  {
+    "id": 112,
+    "title": "All Orders for Alice Chen",
+    "difficulty": "Easy",
+    "category": "Joins",
+    "description": "Customer service received a query from Alice Chen about her order history. The team needs to pull all orders associated with her account.",
+    "question": "Write a query joining orders to customers that returns order_id, order_date, and total_amount for all orders placed by Alice Chen, ordered by order_date ascending.",
+    "hint": "JOIN orders to customers on customer_id, then WHERE customers.name = 'Alice Chen', ORDER BY order_date.",
+    "table_names": ["orders", "customers"],
+    "correct_query": "SELECT o.order_id,\n       o.order_date,\n       o.total_amount\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nWHERE c.name = 'Alice Chen'\nORDER BY o.order_date;",
+    "order_matters": true,
+    "explanation": "**JOIN** links orders to customers on customer_id. **WHERE c.name = 'Alice Chen'** filters to customer 1's orders. Alice (customer_id=1) placed 4 orders: order 1 (Jan), order 3 (Jan), order 7 (Mar), order 14 (Apr). **ORDER BY o.order_date** sorts them chronologically.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT o.order_id,\n       o.order_date,\n       o.total_amount\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nWHERE c.name = 'Alice Chen'\nORDER BY o.order_date;",
+        "correct": true,
+        "explanation": "CORRECT. Joins on customer_id, filters to Alice Chen, and returns her 4 orders sorted by date."
+      },
+      {
+        "id": "B",
+        "text": "SELECT o.order_id,\n       o.order_date,\n       o.total_amount\nFROM orders o\nWHERE o.customer_id = 1\nORDER BY o.order_date;",
+        "correct": false,
+        "explanation": "INCORRECT. Hard-coding customer_id = 1 bypasses the join and relies on knowing Alice's ID, which is not part of the intended approach and may not always be reliable."
+      },
+      {
+        "id": "C",
+        "text": "SELECT o.order_id,\n       o.order_date,\n       o.total_amount\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nWHERE c.name = 'Alice Chen'\nORDER BY o.total_amount DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY total_amount DESC sorts by order value, not by order date as the question requires."
+      },
+      {
+        "id": "D",
+        "text": "SELECT o.order_id,\n       o.order_date,\n       o.total_amount\nFROM orders o\nJOIN customers c ON o.customer_id = c.customer_id\nWHERE c.name LIKE 'Alice%'\nORDER BY o.order_date;",
+        "correct": false,
+        "explanation": "INCORRECT. LIKE 'Alice%' would match any customer whose name starts with Alice, potentially including others; an exact equality match is the correct approach here."
+      }
+    ]
+  },
+  {
+    "id": 113,
+    "title": "Price Range per Product Category",
+    "difficulty": "Easy",
+    "category": "Aggregation & Grouping",
+    "description": "The pricing team wants to understand the spread of prices within each product category to identify outliers and standardize pricing tiers.",
+    "question": "Write a query returning category, the minimum price as min_price, the maximum price as max_price, and the difference (max minus min) as price_range from the products table. Group by category and order by category ascending.",
+    "hint": "Use MIN(price), MAX(price), and MAX(price) - MIN(price) in a GROUP BY category query.",
+    "table_names": ["products"],
+    "correct_query": "SELECT category,\n       MIN(price) AS min_price,\n       MAX(price) AS max_price,\n       MAX(price) - MIN(price) AS price_range\nFROM products\nGROUP BY category\nORDER BY category;",
+    "order_matters": true,
+    "explanation": "**GROUP BY category** groups rows by product category. **MIN(price)** and **MAX(price)** find the cheapest and most expensive product in each group. **MAX(price) - MIN(price)** computes the range. Electronics spans 29.99 to 1299.99, Furniture 45.99 to 549.99, Stationery 8.99 to 19.99.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT category,\n       MIN(price) AS min_price,\n       MAX(price) AS max_price,\n       MAX(price) - MIN(price) AS price_range\nFROM products\nGROUP BY category\nORDER BY category;",
+        "correct": true,
+        "explanation": "CORRECT. Correctly computes min, max, and range per category, ordered alphabetically by category."
+      },
+      {
+        "id": "B",
+        "text": "SELECT category,\n       MIN(price) AS min_price,\n       MAX(price) AS max_price,\n       MAX(price) - MIN(price) AS price_range\nFROM products\nGROUP BY category\nORDER BY price_range DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Orders by price_range descending instead of by category alphabetically as required."
+      },
+      {
+        "id": "C",
+        "text": "SELECT category,\n       MIN(price) AS min_price,\n       MAX(price) AS max_price,\n       AVG(price) - MIN(price) AS price_range\nFROM products\nGROUP BY category\nORDER BY category;",
+        "correct": false,
+        "explanation": "INCORRECT. Uses AVG(price) - MIN(price) for price_range instead of MAX(price) - MIN(price), computing a different metric."
+      },
+      {
+        "id": "D",
+        "text": "SELECT category,\n       MIN(price) AS min_price,\n       MAX(price) AS max_price,\n       price - MIN(price) AS price_range\nFROM products\nGROUP BY category\nORDER BY category;",
+        "correct": false,
+        "explanation": "INCORRECT. price in the SELECT is a non-aggregated column mixed with aggregates without being in GROUP BY, which is invalid SQL."
+      }
+    ]
+  },
+  {
+    "id": 114,
+    "title": "High-Earning Employees Over $90K",
+    "difficulty": "Easy",
+    "category": "Filtering & Sorting",
+    "description": "The compensation committee is reviewing top earners across the company. They need a list of all employees earning more than $90,000 sorted by salary and then name for tie-breaking.",
+    "question": "Write a query returning all columns from the employees table for employees with salary greater than 90000. Order by salary descending, then by name ascending as a tiebreaker.",
+    "hint": "Use WHERE salary > 90000, then ORDER BY salary DESC, name ASC.",
+    "table_names": ["employees"],
+    "correct_query": "SELECT *\nFROM employees\nWHERE salary > 90000\nORDER BY salary DESC, name;",
+    "order_matters": true,
+    "explanation": "**WHERE salary > 90000** filters to employees earning more than $90k. Five employees qualify: David Brown (110k), Frank Miller (110k), Emma Davis (98k), Alice Johnson (95k), Carol Williams (95k). **ORDER BY salary DESC** sorts highest first, and **name ASC** (the default) breaks ties alphabetically, so David appears before Frank, and Alice before Carol.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT *\nFROM employees\nWHERE salary > 90000\nORDER BY salary DESC, name;",
+        "correct": true,
+        "explanation": "CORRECT. Filters to salaries above 90000 (5 employees) and sorts by salary desc then name asc for tiebreaking."
+      },
+      {
+        "id": "B",
+        "text": "SELECT *\nFROM employees\nWHERE salary >= 90000\nORDER BY salary DESC, name;",
+        "correct": false,
+        "explanation": "INCORRECT. >= 90000 would include employees earning exactly $90,000 if any existed. The question requires strictly greater than 90000."
+      },
+      {
+        "id": "C",
+        "text": "SELECT *\nFROM employees\nWHERE salary > 90000\nORDER BY salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Missing the tiebreaker on name, so the ordering of employees with the same salary (David/Frank at 110k, Alice/Carol at 95k) is not deterministic."
+      },
+      {
+        "id": "D",
+        "text": "SELECT *\nFROM employees\nWHERE salary > 90000\nORDER BY name, salary DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. Ordering by name first then salary means results are sorted alphabetically by name, not primarily by salary as required."
+      }
+    ]
+  },
+  {
+    "id": 115,
+    "title": "Customer Spending Summary",
+    "difficulty": "Easy",
+    "category": "Aggregation & Grouping",
+    "description": "The customer success team wants a complete spending overview for all active customers. Customers who have never placed an order (Oliver White and Sophia Harris) are excluded from this report.",
+    "question": "Write a query joining customers to orders that returns customer name, count of orders as order_count, total amount spent rounded to 2 decimals as total_spent, and average order value rounded to 2 decimals as avg_order_value. Group by customer name, order by total_spent descending. Only customers who have placed at least one order should appear (10 rows).",
+    "hint": "INNER JOIN customers to orders on customer_id, GROUP BY customer name, ORDER BY total_spent DESC.",
+    "table_names": ["customers", "orders"],
+    "correct_query": "SELECT c.name,\n       COUNT(o.order_id) AS order_count,\n       ROUND(SUM(o.total_amount), 2) AS total_spent,\n       ROUND(AVG(o.total_amount), 2) AS avg_order_value\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.name\nORDER BY total_spent DESC;",
+    "order_matters": true,
+    "explanation": "**INNER JOIN** naturally excludes customers 11 and 12 (Oliver White, Sophia Harris) since they have no orders. **GROUP BY c.name** aggregates per customer. **COUNT(o.order_id)** counts orders, **SUM** totals spending, **AVG** computes average order value. Results are sorted by total_spent descending, showing Alice Chen at the top with 4 orders.",
+    "choices": [
+      {
+        "id": "A",
+        "text": "SELECT c.name,\n       COUNT(o.order_id) AS order_count,\n       ROUND(SUM(o.total_amount), 2) AS total_spent,\n       ROUND(AVG(o.total_amount), 2) AS avg_order_value\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.name\nORDER BY total_spent DESC;",
+        "correct": true,
+        "explanation": "CORRECT. INNER JOIN excludes customers with no orders, GROUP BY aggregates per customer, and ORDER BY total_spent DESC sorts highest spenders first."
+      },
+      {
+        "id": "B",
+        "text": "SELECT c.name,\n       COUNT(o.order_id) AS order_count,\n       ROUND(SUM(o.total_amount), 2) AS total_spent,\n       ROUND(AVG(o.total_amount), 2) AS avg_order_value\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.name\nORDER BY total_spent DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. LEFT JOIN includes all 12 customers including Oliver White and Sophia Harris with NULL totals, returning 12 rows instead of 10."
+      },
+      {
+        "id": "C",
+        "text": "SELECT c.name,\n       COUNT(o.order_id) AS order_count,\n       ROUND(SUM(o.total_amount), 2) AS total_spent,\n       ROUND(AVG(o.total_amount), 2) AS avg_order_value\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.name\nORDER BY order_count DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. ORDER BY order_count DESC sorts by number of orders rather than by total spending amount as required."
+      },
+      {
+        "id": "D",
+        "text": "SELECT c.name,\n       COUNT(*) AS order_count,\n       ROUND(SUM(o.total_amount), 2) AS total_spent,\n       ROUND(AVG(o.total_amount), 2) AS avg_order_value\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_id\nORDER BY total_spent DESC;",
+        "correct": false,
+        "explanation": "INCORRECT. GROUP BY c.customer_id groups by ID instead of name; while it produces the same number of rows, the selected c.name may not be properly associated in strict SQL without being in the GROUP BY."
+      }
+    ]
+  }
+]
