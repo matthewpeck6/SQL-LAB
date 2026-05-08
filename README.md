@@ -1,15 +1,15 @@
 # SQL-LAB
 A program to practice SQL questions focused on more difficult problems like Window Functions, CTEs (Common Table Expressions), Subqueries, and Joins
 
-SQL Practice Lab — Complete
+SQL Practice Lab —- Complete
 Files created:
 
-app.py — Flask server
-database.py — DuckDB execution + grading engine
-problems.py — 10 problems with full datasets
-templates/index.html — UI
-static/style.css — Dark theme
-static/script.js — Frontend logic
+app.py - Flask server
+database.py - DuckDB execution + grading engine
+problems.py - 10 problems with full datasets
+templates/index.html - UI
+static/style.css - Dark theme
+static/script.js - Frontend logic
 requirements.txt
 
 Run steps 0, 1 and 2 to reset:
@@ -18,21 +18,21 @@ Run Steps 3 and 4 to execute app function:
 Step 0 - Web Address to app.py website: http://127.0.0.1:5000
 Get ollama+qwen2-7b JSON output or Error Message: http://127.0.0.1:5000/api/test_ollama
 
-Step 1 — Kill every running Python process:
+Step 1 - Kill every running Python process:
 Get-Process -Name python -ErrorAction SilentlyContinue | Stop-Process -Force
 
-Step 2 — Verify port 5000 is free:
+Step 2 - Verify port 5000 is free:
 netstat -ano | findstr ":5000"
 This should return nothing. If it still shows something, note the PID (last column) and run:
 taskkill /PID <that_PID> /F
 
 
 
-Step 3 — Start fresh from the correct folder:
+Step 3 - Start fresh from the correct folder:
 cd "c:\Users\matth\Documents\Claude_Code_Textbooks\Static SQL Practice"
 python app.py
 
-Step 4 — Look at the terminal output. You should see something like:
+Step 4 - Look at the terminal output. You should see something like:
 [app.py] Loading from: C:\Users\matth\Documents\...\app.py
 [app.py] Routes registered: ['/', '/api/bank_problem', '/api/test_ollama', '/api/problem', '/api/submit', ...]
  * Running on http://127.0.0.1:5000
@@ -65,7 +65,7 @@ Count  Category                           Difficulty Mix
 ( 5)   Subqueries                         3M(problems.py) + 1H(problems.py) + 1H(qb_hard)
 ( 1)   Recursive CTEs                     1H(qb_hard)
 
-Notable gaps if you want better coverage:
-Filtering & Sorting — 6 questions,  all Easy,  all in qb_easy,  zero Medium/Hard
-Recursive CTEs — only 1 question total
-Subqueries — only 5 questions,  nothing Easy
+Next Steps to improve Notable gaps if you want better coverage:
+Filtering & Sorting - 6 questions,  all Easy,  all in qb_easy,  zero Medium/Hard
+Recursive CTEs - only 1 question total
+Subqueries - only 5 questions,  nothing Easy
