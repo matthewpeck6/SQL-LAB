@@ -12,33 +12,17 @@ static/style.css - Dark theme
 static/script.js - Frontend logic
 requirements.txt
 
-Run steps 0, 1 and 2 to reset:
-Run Steps 3 and 4 to execute app function:
 
-Step 0 - Web Address to app.py website: http://127.0.0.1:5000
-Get ollama+qwen2-7b JSON output or Error Message: http://127.0.0.1:5000/api/test_ollama
+Run Steps 1 and 2 to run the weblink app
 
-Step 1 - Kill every running Python process:
-Get-Process -Name python -ErrorAction SilentlyContinue | Stop-Process -Force
-
-Step 2 - Verify port 5000 is free:
-netstat -ano | findstr ":5000"
-This should return nothing. If it still shows something, note the PID (last column) and run:
-taskkill /PID <that_PID> /F
-
-
-
-Step 3 - Start fresh from the correct folder:
-cd "c:\Users\matth\Documents\Claude_Code_Textbooks\Static SQL Practice"
+Step 1 - Start fresh from the correct folder:
+cd into the directory with the repository and run the following command:
 python app.py
 
-Step 4 - Look at the terminal output. You should see something like:
-[app.py] Loading from: C:\Users\matth\Documents\...\app.py
+Step 2 - Look at the terminal output. You should see something like:
+[app.py] Loading from: C:/.../SQL-LAB/app.py
 [app.py] Routes registered: ['/', '/api/bank_problem', '/api/test_ollama', '/api/problem', '/api/submit', ...]
- * Running on http://127.0.0.1:5000
-
-If /api/test_ollama appears in that routes list, the new code is running. If you instead see an error like Address already in use or OSError, share it here and we'll fix it. If the routes list is missing test_ollama, share the full output so I can see what's actually loading.
-
+ * Running on web_link
 
 
 Total: 65 questions
